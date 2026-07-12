@@ -56,7 +56,23 @@ Evolution API  ──(webhook)──►  ESTE SERVIÇO (Node/Fastify)
 
 ---
 
-## Passo a passo para subir
+## 🚀 Testar a Júria agora (2 minutos, sem WhatsApp)
+
+A assistente se chama **Júria**. Para conversar com ela no terminal — sem
+Evolution, sem Supabase, só com a chave da Claude:
+
+```bash
+npm install
+cp .env.example .env       # e coloque sua ANTHROPIC_API_KEY dentro
+npm run chat
+```
+
+Digite mensagens como se fosse um cliente ("oi, fui demitido sem justa causa")
+e veja a Júria fazer a triagem. É o jeito mais rápido de validar a IA hoje.
+
+---
+
+## Passo a passo para subir (produção, com WhatsApp)
 
 ### 1. Supabase
 1. Crie um projeto em [supabase.com](https://supabase.com).

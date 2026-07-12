@@ -7,6 +7,7 @@ import { createInstance, connectInstance, connectionState } from '../evolution/c
 interface CriarTenantBody {
   nome_escritorio: string;
   nome_advogado: string;
+  nome_assistente?: string;
   areas?: string[];
   tom?: string;
   instrucoes_customizadas?: string;
@@ -59,6 +60,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       const tenant = await createTenant({
         nome_escritorio: body.nome_escritorio,
         nome_advogado: body.nome_advogado,
+        nome_assistente: body.nome_assistente?.trim() || 'Júria',
         areas: body.areas ?? [],
         tom: body.tom ?? 'cordial, profissional e acolhedor',
         instrucoes_customizadas: body.instrucoes_customizadas ?? '',

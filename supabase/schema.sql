@@ -15,6 +15,8 @@ create table if not exists tenants (
 
   nome_escritorio       text not null,
   nome_advogado         text not null,
+  -- Nome da assistente virtual (a "personagem" que conversa com o lead).
+  nome_assistente       text not null default 'Júria',
   -- Áreas de atuação (ex: {"previdenciario","trabalhista"}).
   -- Se vazio, o agente atende qualquer área.
   areas                 text[] not null default '{}',

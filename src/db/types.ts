@@ -3,6 +3,7 @@ export interface Tenant {
   ativo: boolean;
   nome_escritorio: string;
   nome_advogado: string;
+  nome_assistente: string;
   areas: string[];
   tom: string;
   instrucoes_customizadas: string | null;

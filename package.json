@@ -1,0 +1,28 @@
+{
+  "name": "agente-preatendimento",
+  "version": "0.1.0",
+  "description": "Agente de pré-atendimento (triagem) por WhatsApp para advogados — multi-tenant, plug and play.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.0.0",
+    "pino": "^9.4.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "^11.2.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "@types/node": "^22.7.4"
+  }
+}

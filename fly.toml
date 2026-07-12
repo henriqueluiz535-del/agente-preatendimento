@@ -1,0 +1,23 @@
+# Configuração do Fly.io. Troque "app" pelo nome do seu app após `fly launch`.
+app = "agente-preatendimento"
+primary_region = "gru" # São Paulo
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[http_service.checks]]
+  method = "GET"
+  path = "/health"
+  interval = "30s"
+  timeout = "5s"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"

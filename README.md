@@ -74,6 +74,12 @@ e veja a Júria fazer a triagem. É o jeito mais rápido de validar a IA hoje.
 
 ## Passo a passo para subir (produção, com WhatsApp)
 
+> 📘 **É leigo e quer o passo a passo mastigado?** Siga o
+> **[guia completo de deploy](docs/DEPLOY.md)** — sobe tudo (Júria + Evolution)
+> num servidor só com `docker compose up`, do zero ao WhatsApp funcionando.
+>
+> O resumo abaixo é para quem já tem familiaridade.
+
 ### 1. Supabase
 1. Crie um projeto em [supabase.com](https://supabase.com).
 2. No **SQL Editor**, cole e rode o conteúdo de `supabase/schema.sql`.

@@ -48,6 +48,7 @@ export async function createInstance(instanceName: string): Promise<any> {
       qrcode: true,
       integration: 'WHATSAPP-BAILEYS',
       webhook: {
+        enabled: true,
         url: webhookUrl,
         byEvents: false,
         base64: false,

@@ -1,11 +1,22 @@
 import 'dotenv/config';
 
+// Remove caracteres não-ASCII/invisíveis (ex: "•", aspas curvas, espaços
+// zero-width) que às vezes entram via copy-paste e quebram cabeçalhos HTTP.
+// Todos os nossos valores de config são ASCII, então isso é seguro.
+function sanitize(value: string): string {
+  return value.replace(/[^\x20-\x7E]/g, '').trim();
+}
+
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) {
+  if (!value || !sanitize(value)) {
     throw new Error(`Variável de ambiente obrigatória ausente: ${name}`);
   }
-  return value;
+  return sanitize(value);
+}
+
+function optional(name: string, fallback: string): string {
+  return sanitize(process.env[name] ?? '') || fallback;
 }
 
 export const config = {
@@ -14,7 +25,7 @@ export const config = {
 
   anthropic: {
     apiKey: required('ANTHROPIC_API_KEY'),
-    model: process.env.ANTHROPIC_MODEL ?? 'claude-haiku-4-5',
+    model: optional('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
   },
 
   supabase: {
@@ -27,5 +38,5 @@ export const config = {
     apiKey: required('EVOLUTION_API_KEY'),
   },
 
-  publicUrl: (process.env.PUBLIC_URL ?? '').replace(/\/$/, ''),
+  publicUrl: sanitize(process.env.PUBLIC_URL ?? '').replace(/\/$/, ''),
 };

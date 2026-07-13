@@ -28,6 +28,14 @@ export const config = {
     model: optional('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
   },
 
+  // Transcrição de áudio (Whisper). Opcional: se não houver chave, áudios
+  // recebem uma resposta pedindo texto. Compatível com OpenAI e Groq.
+  transcricao: {
+    apiKey: sanitize(process.env.TRANSCRICAO_API_KEY ?? ''),
+    apiUrl: optional('TRANSCRICAO_API_URL', 'https://api.openai.com/v1'),
+    model: optional('TRANSCRICAO_MODEL', 'whisper-1'),
+  },
+
   supabase: {
     url: required('SUPABASE_URL'),
     serviceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),

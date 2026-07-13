@@ -6,6 +6,8 @@ export interface IncomingMessage {
   nomeContato: string | null;
   texto: string | null;
   isGroup: boolean;
+  isAudio: boolean;
+  messageId: string | null;
 }
 
 export function parseIncoming(payload: any): IncomingMessage | null {
@@ -25,11 +27,15 @@ export function parseIncoming(payload: any): IncomingMessage | null {
     msg.videoMessage?.caption ??
     null;
 
+  const isAudio = Boolean(msg.audioMessage ?? msg.pttMessage);
+
   return {
     fromMe: Boolean(data.key.fromMe),
     contato: remoteJid.replace(/@s\.whatsapp\.net$/, '').replace(/@g\.us$/, ''),
     nomeContato: data.pushName ?? null,
     texto: texto?.trim() || null,
     isGroup,
+    isAudio,
+    messageId: data.key.id ?? null,
   };
 }

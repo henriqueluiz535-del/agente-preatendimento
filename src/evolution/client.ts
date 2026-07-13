@@ -67,3 +67,21 @@ export async function connectInstance(instanceName: string): Promise<any> {
 export async function connectionState(instanceName: string): Promise<any> {
   return evoFetch(`/instance/connectionState/${instanceName}`, { method: 'GET' });
 }
+
+/** Baixa uma mídia (ex: áudio) em base64 a partir do ID da mensagem. */
+export async function getBase64FromMediaMessage(
+  instance: string,
+  messageId: string,
+): Promise<{ base64: string; mimetype: string } | null> {
+  try {
+    const res = await evoFetch(`/chat/getBase64FromMediaMessage/${instance}`, {
+      method: 'POST',
+      body: JSON.stringify({ message: { key: { id: messageId } }, convertToMp4: false }),
+    });
+    if (!res?.base64) return null;
+    return { base64: res.base64, mimetype: res.mimetype ?? 'audio/ogg' };
+  } catch (err) {
+    logger.error({ err, instance }, 'Falha ao baixar mídia da Evolution');
+    return null;
+  }
+}

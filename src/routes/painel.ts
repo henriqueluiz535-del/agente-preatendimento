@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 
-// Painel da agência (HENRIQUECER Assessoria).
-// Servido como página única. Autentica com a ADMIN_API_KEY e consome as rotas /admin/*.
-// Cores em variáveis CSS (:root) — fácil de trocar pela identidade oficial.
+// Painel da agência (HENRIQUECER Assessoria Digital).
+// Identidade: preto + dourado. Servido como página única.
+// Autentica com a ADMIN_API_KEY e consome as rotas /admin/*.
 
 const HTML = /* html */ `<!doctype html>
 <html lang="pt-BR">
@@ -12,72 +12,76 @@ const HTML = /* html */ `<!doctype html>
 <title>HENRIQUECER · Painel Júria</title>
 <style>
   :root{
-    --verde:#0b3d2e; --verde-2:#145c43;
-    --dourado:#c9a24b; --dourado-2:#b8912f;
-    --bg:#f5f4f0; --card:#ffffff; --texto:#1b1b1b; --muted:#6b7280;
-    --linha:#e8e6e0; --ok:#127a4f; --off:#9ca3af; --erro:#b42318;
-    --serif:Georgia,'Times New Roman',serif;
+    --bg:#0d0d0d; --preto:#000; --card:#191919; --card-2:#141414;
+    --dourado:#e8b84b; --dourado-2:#d1a238;
+    --texto:#f4f2ec; --muted:#9b968c; --linha:#2b2b2b;
+    --ok:#3ecf8e; --off:#6b6b6b; --erro:#ff6b5e;
     --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--texto);font-family:var(--sans);font-size:15px;line-height:1.5}
-  a{color:inherit}
   .hidden{display:none!important}
+  /* Marca */
+  .brand{display:flex;flex-direction:column;line-height:1.15}
+  .brand b{font-size:20px;font-weight:800;letter-spacing:3px}
+  .brand b i{color:var(--dourado);font-style:normal}
+  .brand span{font-size:10px;letter-spacing:4px;color:var(--dourado);text-transform:uppercase;margin-top:1px}
   /* Header */
-  header{background:var(--verde);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--dourado)}
-  .brand{display:flex;flex-direction:column;line-height:1.1}
-  .brand b{font-family:var(--serif);font-size:20px;letter-spacing:2px}
-  .brand span{font-size:11px;letter-spacing:3px;color:var(--dourado);text-transform:uppercase}
-  header .sair{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px}
-  header .sair:hover{background:rgba(255,255,255,.1)}
+  header{background:var(--preto);color:#fff;padding:15px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--dourado)}
+  header .sair{background:transparent;border:1px solid rgba(232,184,75,.4);color:var(--dourado);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+  header .sair:hover{background:rgba(232,184,75,.12)}
   /* Layout */
   main{max-width:1000px;margin:0 auto;padding:24px 18px 60px}
   .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--linha)}
-  .tabs button{background:none;border:none;padding:12px 18px;cursor:pointer;font-size:15px;color:var(--muted);border-bottom:2px solid transparent;font-weight:600}
-  .tabs button.on{color:var(--verde);border-color:var(--dourado)}
-  h2{font-family:var(--serif);font-weight:600;margin:0}
+  .tabs button{background:none;border:none;padding:12px 18px;cursor:pointer;font-size:15px;color:var(--muted);border-bottom:2px solid transparent;font-weight:700}
+  .tabs button.on{color:var(--dourado);border-color:var(--dourado)}
+  h2{font-weight:800;margin:0;font-size:22px;letter-spacing:.3px}
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
   /* Botões */
-  .btn{background:var(--dourado);color:#1b1b1b;border:none;padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn{background:var(--dourado);color:#171717;border:none;padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:800;font-size:14px}
   .btn:hover{background:var(--dourado-2)}
-  .btn.ghost{background:transparent;border:1px solid var(--linha);color:var(--verde);font-weight:600}
-  .btn.ghost:hover{background:#faf9f6}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.ghost{background:transparent;border:1px solid var(--linha);color:var(--dourado);font-weight:700}
+  .btn.ghost:hover{background:#1f1f1f}
   .btn.sm{padding:7px 12px;font-size:13px}
   /* Cards */
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
   .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px}
-  .card h3{margin:0 0 2px;font-family:var(--serif);font-size:18px}
+  .card h3{margin:0 0 2px;font-size:18px;font-weight:800}
   .card .adv{color:var(--muted);font-size:13px;margin-bottom:10px}
+  .card .adv b{color:var(--dourado)}
   .card .meta{font-size:12px;color:var(--muted);margin:2px 0}
   .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
   .badge .dot{width:8px;height:8px;border-radius:50%}
-  .badge.ok{background:#e6f4ee;color:var(--ok)} .badge.ok .dot{background:var(--ok)}
-  .badge.off{background:#f1f1f0;color:#555} .badge.off .dot{background:var(--off)}
+  .badge.ok{background:rgba(62,207,142,.14);color:var(--ok)} .badge.ok .dot{background:var(--ok)}
+  .badge.off{background:#242424;color:var(--muted)} .badge.off .dot{background:var(--off)}
   .card .acoes{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
   /* Tabela leads */
   .tabela{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--linha);border-radius:14px;overflow:hidden}
   .tabela th,.tabela td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--linha);font-size:13px;vertical-align:top}
-  .tabela th{background:#faf9f6;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+  .tabela th{background:#141414;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
   .tabela tr:last-child td{border-bottom:none}
-  .urg{font-weight:700;font-size:11px;padding:2px 8px;border-radius:6px;text-transform:uppercase}
-  .urg.alta{background:#fdecea;color:var(--erro)} .urg.media{background:#fff4e0;color:#a15c00} .urg.baixa{background:#eef2f7;color:#3b5566}
-  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:#eef4f1;color:var(--verde)}
+  .urg{font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;text-transform:uppercase}
+  .urg.alta{background:rgba(255,107,94,.16);color:#ff8a80} .urg.media{background:rgba(232,184,75,.16);color:var(--dourado)} .urg.baixa{background:#242424;color:var(--muted)}
+  .pill{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:rgba(232,184,75,.14);color:var(--dourado)}
   .vazio{color:var(--muted);padding:40px;text-align:center}
-  select,input,textarea{font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--linha);border-radius:9px;width:100%;background:#fff}
-  label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px;color:#374151}
+  select,input,textarea{font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--linha);border-radius:9px;width:100%;background:var(--card-2);color:var(--texto)}
+  input::placeholder{color:#6b6b6b}
+  label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px;color:#cfcabd}
   /* Modal */
-  .overlay{position:fixed;inset:0;background:rgba(11,61,46,.5);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
-  .modal{background:#fff;border-radius:16px;max-width:460px;width:100%;padding:24px;max-height:92vh;overflow:auto}
-  .modal h3{font-family:var(--serif);margin:0 0 4px;font-size:20px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .modal{background:var(--card);border:1px solid var(--linha);border-radius:16px;max-width:460px;width:100%;padding:24px;max-height:92vh;overflow:auto}
+  .modal h3{margin:0 0 4px;font-size:20px;font-weight:800}
   .modal .fechar{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
   .qrbox{text-align:center;padding:8px}
-  .qrbox img{width:260px;max-width:100%;border:1px solid var(--linha);border-radius:12px}
-  .aviso{background:#fff9ea;border:1px solid #f0e2b8;color:#7a5b00;padding:10px 12px;border-radius:9px;font-size:13px;margin:10px 0}
+  .qrbox img{width:260px;max-width:100%;border:6px solid #fff;border-radius:12px;background:#fff}
+  .aviso{background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.35);color:#e8cf95;padding:10px 12px;border-radius:9px;font-size:13px;margin:10px 0}
   /* Login */
-  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--verde);padding:20px}
-  .login .box{background:#fff;border-radius:18px;padding:34px;max-width:380px;width:100%;text-align:center;border-top:4px solid var(--dourado)}
-  .login b{font-family:var(--serif);font-size:26px;letter-spacing:3px;color:var(--verde)}
-  .login span{display:block;font-size:11px;letter-spacing:4px;color:var(--dourado);text-transform:uppercase;margin-bottom:22px}
+  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#1a1a1a,#000);padding:20px}
+  .login .box{background:var(--card);border-radius:18px;padding:34px;max-width:380px;width:100%;text-align:center;border-top:3px solid var(--dourado);border-left:1px solid var(--linha);border-right:1px solid var(--linha);border-bottom:1px solid var(--linha)}
+  .logoH{width:64px;height:64px;margin:0 auto 14px;border:3px solid var(--dourado);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:var(--dourado)}
+  .login b{font-size:24px;font-weight:800;letter-spacing:3px;color:#fff}
+  .login .sub{display:block;font-size:10px;letter-spacing:4px;color:var(--dourado);text-transform:uppercase;margin:2px 0 22px}
   .erroMsg{color:var(--erro);font-size:13px;margin-top:10px;min-height:16px}
   .muted{color:var(--muted);font-size:12px}
 </style>
@@ -87,7 +91,8 @@ const HTML = /* html */ `<!doctype html>
 <!-- LOGIN -->
 <div id="login" class="login">
   <div class="box">
-    <b>HENRIQUECER</b><span>Assessoria · Painel Júria</span>
+    <div class="logoH">H</div>
+    <b>HENRIQUECER</b><span class="sub">Assessoria Digital</span>
     <label style="text-align:left">Chave de acesso (admin)</label>
     <input id="chave" type="password" placeholder="Cole sua ADMIN_API_KEY" />
     <div class="erroMsg" id="loginErro"></div>
@@ -98,7 +103,7 @@ const HTML = /* html */ `<!doctype html>
 <!-- APP -->
 <div id="app" class="hidden">
   <header>
-    <div class="brand"><b>HENRIQUECER</b><span>Assessoria · Painel Júria</span></div>
+    <div class="brand"><b><i>H</i>ENRIQUECER</b><span>Assessoria Digital · Painel Júria</span></div>
     <button class="sair" onclick="sair()">Sair</button>
   </header>
   <main>
@@ -107,7 +112,6 @@ const HTML = /* html */ `<!doctype html>
       <button id="tabLeads" onclick="mostrar('leads')">Leads</button>
     </div>
 
-    <!-- ADVOGADOS -->
     <section id="secAdv">
       <div class="row">
         <h2>Advogados</h2>
@@ -116,7 +120,6 @@ const HTML = /* html */ `<!doctype html>
       <div id="listaAdv" class="cards"></div>
     </section>
 
-    <!-- LEADS -->
     <section id="secLeads" class="hidden">
       <div class="row">
         <h2>Leads capturados</h2>
@@ -216,7 +219,6 @@ async function carregarLeads(){
 }
 function verLeads(tid){document.getElementById('filtroLead').value=tid;mostrar('leads')}
 
-// ---- Modal ----
 function fecharModal(){document.getElementById('modal').innerHTML=''}
 function abrirModal(html){document.getElementById('modal').innerHTML='<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">'+html+'</div></div>'}
 
@@ -251,7 +253,7 @@ async function salvarNovo(){
   }catch(e){document.getElementById('f_erro').textContent='Erro: '+e.message;b.disabled=false;b.textContent='Cadastrar e gerar QR'}
 }
 async function verQR(inst){
-  abrirModal('<div class="qrbox">Gerando QR…</div>');
+  abrirModal('<div class="qrbox" style="color:var(--muted)">Gerando QR…</div>');
   try{const d=await api('/admin/tenants/'+inst+'/qrcode');mostrarQR(d.qrcode,'Escaneie no WhatsApp do escritório:');}
   catch(e){abrirModal('<button class="fechar" onclick="fecharModal()">×</button><p>Erro: '+esc(e.message)+'</p>')}
 }
@@ -270,7 +272,6 @@ function iniciar(){
   document.getElementById('app').classList.remove('hidden');
   carregarAdv();
 }
-// auto-login se já tem chave salva
 if(chave()){ api('/admin/tenants').then(iniciar).catch(sair); }
 document.getElementById('chave').addEventListener('keydown',e=>{if(e.key==='Enter')entrar()});
 </script>

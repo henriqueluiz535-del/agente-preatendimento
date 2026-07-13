@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState } from '../evolution/client.js';
 
 interface CriarTenantBody {
@@ -83,6 +83,19 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       logger.error({ err, instance }, 'Falha no onboarding do tenant');
       return reply.code(500).send({ error: 'falha ao criar tenant', detalhe: String(err) });
     }
+  });
+
+  // Listar todos os advogados (tenants)
+  app.get('/admin/tenants', async (_req, reply) => {
+    const tenants = await listTenants();
+    return reply.send({ tenants });
+  });
+
+  // Listar leads (opcionalmente filtrando por tenant_id)
+  app.get('/admin/leads', async (req, reply) => {
+    const { tenant_id } = req.query as { tenant_id?: string };
+    const leads = await listLeads(tenant_id);
+    return reply.send({ leads });
   });
 
   // Reemitir QR Code (caso expire antes de conectar)

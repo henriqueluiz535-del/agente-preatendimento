@@ -20,6 +20,27 @@ export async function createTenant(input: Partial<Tenant> & { evolution_instance
   return data as Tenant;
 }
 
+export async function listTenants(): Promise<any[]> {
+  const { data, error } = await db
+    .from('tenants')
+    .select('id, nome_escritorio, nome_advogado, nome_assistente, areas, whatsapp_advogado, evolution_instance, ativo, created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listLeads(tenantId?: string): Promise<any[]> {
+  let query = db
+    .from('leads')
+    .select('*, conversations(contato, nome_contato, status)')
+    .order('updated_at', { ascending: false })
+    .limit(200);
+  if (tenantId) query = query.eq('tenant_id', tenantId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
 // ---------- Conversations ----------
 
 export async function getOrCreateConversation(

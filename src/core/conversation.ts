@@ -26,11 +26,20 @@ export async function handleLeadMessage(
   const conversa = await getOrCreateConversation(tenant.id, contato, nomeContato);
 
   // Se um humano (advogado) assumiu, a IA não responde — só registra.
+  // Exceção: se a janela de takeover expirou, a Júria reassume sozinha
+  // (para o lead não ficar sem resposta caso o advogado tenha esquecido).
   if (conversa.status === 'pausado') {
-    logger.info({ conversa: conversa.id }, 'Conversa pausada (advogado assumiu) — IA não responde');
-    await addMessage(conversa.id, 'user', texto);
-    await touchLeadActivity(conversa.id);
-    return;
+    const janelaExpirou =
+      conversa.pausado_ate != null && new Date(conversa.pausado_ate).getTime() < Date.now();
+    if (!janelaExpirou) {
+      logger.info({ conversa: conversa.id }, 'Conversa pausada (advogado assumiu) — IA não responde');
+      await addMessage(conversa.id, 'user', texto);
+      await touchLeadActivity(conversa.id);
+      return;
+    }
+    await setConversationStatus(conversa.id, 'ativo');
+    conversa.status = 'ativo';
+    logger.info({ conversa: conversa.id }, 'Janela de takeover expirou — Júria reassumiu');
   }
 
   // Lead voltou depois do encerramento por inatividade: reabre a conversa.

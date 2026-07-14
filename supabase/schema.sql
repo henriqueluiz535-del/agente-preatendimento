@@ -49,6 +49,11 @@ create table if not exists conversations (
   ultimo_contato_lead timestamptz not null default now(),
   ultimo_followup     timestamptz,
 
+  -- Takeover humano: até quando a pausa vale (null = pausa sem prazo).
+  -- Renovada a cada mensagem manual do advogado; expirou e o lead escreveu,
+  -- a Júria reassume sozinha.
+  pausado_ate         timestamptz,
+
   unique (tenant_id, contato)
 );
 

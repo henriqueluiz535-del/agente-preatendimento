@@ -89,9 +89,15 @@ export async function touchLeadActivity(conversationId: string): Promise<void> {
 
 /**
  * Pausa a conversa de um contato (advogado assumiu o atendimento manualmente).
- * Retorna o id da conversa pausada, ou null se não havia conversa ativa.
+ * pausadoAte: até quando a pausa vale (ISO) — null = pausa sem prazo (#pausar).
+ * Se já estiver pausada, apenas renova a janela.
+ * Retorna o id da conversa afetada, ou null se não existe conversa.
  */
-export async function pauseConversationByContact(tenantId: string, contato: string): Promise<string | null> {
+export async function pauseConversationByContact(
+  tenantId: string,
+  contato: string,
+  pausadoAte: string | null,
+): Promise<string | null> {
   const { data, error } = await db
     .from('conversations')
     .select('id, status')
@@ -99,8 +105,30 @@ export async function pauseConversationByContact(tenantId: string, contato: stri
     .eq('contato', contato)
     .maybeSingle();
   if (error) throw error;
-  if (!data || data.status === 'pausado' || data.status === 'encerrado') return null;
-  await setConversationStatus(data.id, 'pausado');
+  if (!data) return null;
+  const { error: updErr } = await db
+    .from('conversations')
+    .update({ status: 'pausado', pausado_ate: pausadoAte, updated_at: new Date().toISOString() })
+    .eq('id', data.id);
+  if (updErr) throw updErr;
+  return data.id;
+}
+
+/** Devolve a conversa para a Júria (#voltar). Retorna o id, ou null se não existe. */
+export async function resumeConversationByContact(tenantId: string, contato: string): Promise<string | null> {
+  const { data, error } = await db
+    .from('conversations')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('contato', contato)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const { error: updErr } = await db
+    .from('conversations')
+    .update({ status: 'ativo', pausado_ate: null, updated_at: new Date().toISOString() })
+    .eq('id', data.id);
+  if (updErr) throw updErr;
   return data.id;
 }
 

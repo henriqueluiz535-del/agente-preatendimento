@@ -19,6 +19,7 @@ export interface Conversation {
   contato: string;
   nome_contato: string | null;
   status: string;
+  pausado_ate?: string | null;
 }
 
 export interface Message {

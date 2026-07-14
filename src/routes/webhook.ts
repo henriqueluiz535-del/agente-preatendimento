@@ -1,6 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { logger } from '../logger.js';
-import { getTenantByInstance, pauseConversationByContact } from '../db/repositories.js';
+import {
+  getTenantByInstance,
+  pauseConversationByContact,
+  resumeConversationByContact,
+} from '../db/repositories.js';
 import { parseIncoming } from '../evolution/webhook.js';
 import { getBase64FromMediaMessage, sendText, foiEnviadoPeloBot } from '../evolution/client.js';
 import { transcricaoAtiva, transcreverAudio } from '../agent/transcribe.js';
@@ -21,20 +25,40 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
       if (!msg || msg.isGroup) return;
 
       // Mensagem enviada PELO número do escritório (fromMe):
-      // se não foi a Júria que enviou, foi o ADVOGADO digitando manualmente
-      // — a Júria pausa e deixa o humano assumir a conversa.
+      // se não foi a Júria que enviou, foi o ADVOGADO manualmente (texto ou
+      // áudio) — a Júria pausa e deixa o humano assumir.
+      // A pausa vale por TAKEOVER_HORAS e renova a cada mensagem manual; se a
+      // janela expirar e o lead voltar a escrever, a Júria reassume sozinha.
+      // Comandos do advogado no chat: "#pausar" (pausa sem prazo) e
+      // "#voltar" (devolve a conversa para a Júria imediatamente).
       if (msg.fromMe) {
-        if (msg.texto && !foiEnviadoPeloBot(instance, msg.contato, msg.texto)) {
-          const tenant = await getTenantByInstance(instance);
-          if (tenant) {
-            const pausada = await pauseConversationByContact(tenant.id, msg.contato);
-            if (pausada) {
-              logger.info(
-                { instance, contato: msg.contato },
-                'Advogado assumiu a conversa — Júria pausada para este contato',
-              );
-            }
-          }
+        const TAKEOVER_HORAS = 24;
+        const ehManual =
+          (msg.texto && !foiEnviadoPeloBot(instance, msg.contato, msg.texto)) || msg.isAudio;
+        if (!ehManual) return;
+
+        const tenant = await getTenantByInstance(instance);
+        if (!tenant) return;
+
+        const comando = (msg.texto ?? '').trim().toLowerCase();
+        if (comando === '#voltar' || comando === '#retomar') {
+          const id = await resumeConversationByContact(tenant.id, msg.contato);
+          if (id) logger.info({ instance, contato: msg.contato }, 'Comando #voltar — Júria reassumiu');
+          return;
+        }
+        if (comando === '#pausar') {
+          await pauseConversationByContact(tenant.id, msg.contato, null); // sem prazo
+          logger.info({ instance, contato: msg.contato }, 'Comando #pausar — Júria pausada sem prazo');
+          return;
+        }
+
+        const ate = new Date(Date.now() + TAKEOVER_HORAS * 3600_000).toISOString();
+        const pausada = await pauseConversationByContact(tenant.id, msg.contato, ate);
+        if (pausada) {
+          logger.info(
+            { instance, contato: msg.contato, ate },
+            'Advogado assumiu a conversa — Júria pausada (janela renovável)',
+          );
         }
         return;
       }

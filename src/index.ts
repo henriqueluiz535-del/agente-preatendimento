@@ -4,6 +4,7 @@ import { logger } from './logger.js';
 import { webhookRoutes } from './routes/webhook.js';
 import { adminRoutes } from './routes/admin.js';
 import { painelRoutes } from './routes/painel.js';
+import { iniciarFollowups } from './core/followups.js';
 
 async function main(): Promise<void> {
   const app = Fastify({ loggerInstance: logger as any });
@@ -16,6 +17,8 @@ async function main(): Promise<void> {
 
   await app.listen({ port: config.port, host: '0.0.0.0' });
   logger.info(`Agente de pré-atendimento no ar na porta ${config.port}`);
+
+  iniciarFollowups();
 }
 
 main().catch((err) => {

@@ -74,6 +74,85 @@ export async function setConversationStatus(conversationId: string, status: stri
   if (error) throw error;
 }
 
+/** Marca atividade do lead: zera o ciclo de follow-ups e atualiza o timestamp. */
+export async function touchLeadActivity(conversationId: string): Promise<void> {
+  const { error } = await db
+    .from('conversations')
+    .update({
+      ultimo_contato_lead: new Date().toISOString(),
+      followups_enviados: 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId);
+  if (error) throw error;
+}
+
+/**
+ * Pausa a conversa de um contato (advogado assumiu o atendimento manualmente).
+ * Retorna o id da conversa pausada, ou null se não havia conversa ativa.
+ */
+export async function pauseConversationByContact(tenantId: string, contato: string): Promise<string | null> {
+  const { data, error } = await db
+    .from('conversations')
+    .select('id, status')
+    .eq('tenant_id', tenantId)
+    .eq('contato', contato)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.status === 'pausado' || data.status === 'encerrado') return null;
+  await setConversationStatus(data.id, 'pausado');
+  return data.id;
+}
+
+/** Conversas candidatas a follow-up (ativas/encaminhadas, ciclo não esgotado). */
+export async function listFollowupCandidates(maxFollowups: number): Promise<any[]> {
+  const { data, error } = await db
+    .from('conversations')
+    .select('*')
+    .in('status', ['ativo', 'encaminhado'])
+    .lt('followups_enviados', maxFollowups)
+    .limit(200);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Última mensagem de uma conversa (para saber se o lead está sem responder). */
+export async function getLastMessage(conversationId: string): Promise<Message | null> {
+  const { data, error } = await db
+    .from('messages')
+    .select('role, content')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as Message) ?? null;
+}
+
+/** Registra que o follow-up de número N foi enviado. */
+export async function registerFollowupSent(conversationId: string, n: number): Promise<void> {
+  const { error } = await db
+    .from('conversations')
+    .update({
+      followups_enviados: n,
+      ultimo_followup: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId);
+  if (error) throw error;
+}
+
+export async function getTenantById(tenantId: string): Promise<Tenant | null> {
+  const { data, error } = await db
+    .from('tenants')
+    .select('*')
+    .eq('id', tenantId)
+    .eq('ativo', true)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Tenant | null;
+}
+
 // ---------- Messages ----------
 
 export async function addMessage(conversationId: string, role: 'user' | 'assistant', content: string): Promise<void> {

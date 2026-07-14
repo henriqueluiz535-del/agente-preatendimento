@@ -7,6 +7,7 @@ import {
   upsertLead,
   markLeadEncaminhado,
   setConversationStatus,
+  touchLeadActivity,
 } from '../db/repositories.js';
 import { pensar } from '../agent/brain.js';
 import { sendText } from '../evolution/client.js';
@@ -24,14 +25,22 @@ export async function handleLeadMessage(
 ): Promise<void> {
   const conversa = await getOrCreateConversation(tenant.id, contato, nomeContato);
 
-  // Se um humano pausou a conversa, a IA não responde.
+  // Se um humano (advogado) assumiu, a IA não responde — só registra.
   if (conversa.status === 'pausado') {
-    logger.info({ conversa: conversa.id }, 'Conversa pausada — IA não responde');
+    logger.info({ conversa: conversa.id }, 'Conversa pausada (advogado assumiu) — IA não responde');
     await addMessage(conversa.id, 'user', texto);
+    await touchLeadActivity(conversa.id);
     return;
   }
 
+  // Lead voltou depois do encerramento por inatividade: reabre a conversa.
+  if (conversa.status === 'encerrado') {
+    await setConversationStatus(conversa.id, 'ativo');
+    conversa.status = 'ativo';
+  }
+
   await addMessage(conversa.id, 'user', texto);
+  await touchLeadActivity(conversa.id); // zera o ciclo de follow-ups
 
   const history = await getRecentMessages(conversa.id, 30);
   const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, history);

@@ -43,6 +43,12 @@ create table if not exists conversations (
   status       text not null default 'ativo', -- ativo | qualificado | encaminhado | encerrado | pausado
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
+
+  -- Follow-up automático (reengajamento de leads que pararam de responder)
+  followups_enviados  int not null default 0,
+  ultimo_contato_lead timestamptz not null default now(),
+  ultimo_followup     timestamptz,
+
   unique (tenant_id, contato)
 );
 

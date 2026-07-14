@@ -27,8 +27,35 @@ async function evoFetch(path: string, init: RequestInit = {}): Promise<any> {
   return body;
 }
 
+// ------------------------------------------------------------------
+// Registro de mensagens enviadas pelo bot (últimos minutos).
+// Necessário para distinguir, no webhook, uma mensagem fromMe enviada
+// pela Júria de uma digitada MANUALMENTE pelo advogado no celular
+// (caso em que a Júria deve pausar e deixar o humano assumir).
+// ------------------------------------------------------------------
+const enviadosPeloBot = new Map<string, number>();
+const TTL_ENVIO_MS = 5 * 60 * 1000;
+
+function chaveEnvio(instance: string, number: string, text: string): string {
+  return `${instance}|${number}|${text.trim()}`;
+}
+
+function limparExpirados(): void {
+  const agora = Date.now();
+  for (const [k, exp] of enviadosPeloBot) {
+    if (exp < agora) enviadosPeloBot.delete(k);
+  }
+}
+
+/** A mensagem fromMe recebida no webhook foi enviada pela própria Júria? */
+export function foiEnviadoPeloBot(instance: string, number: string, text: string): boolean {
+  limparExpirados();
+  return enviadosPeloBot.has(chaveEnvio(instance, number, text));
+}
+
 /** Envia uma mensagem de texto para um número/JID através de uma instância. */
 export async function sendText(instance: string, number: string, text: string): Promise<void> {
+  enviadosPeloBot.set(chaveEnvio(instance, number, text), Date.now() + TTL_ENVIO_MS);
   await evoFetch(`/message/sendText/${instance}`, {
     method: 'POST',
     body: JSON.stringify({ number, text }),

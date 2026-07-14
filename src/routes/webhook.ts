@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { logger } from '../logger.js';
-import { getTenantByInstance } from '../db/repositories.js';
+import { getTenantByInstance, pauseConversationByContact } from '../db/repositories.js';
 import { parseIncoming } from '../evolution/webhook.js';
-import { getBase64FromMediaMessage, sendText } from '../evolution/client.js';
+import { getBase64FromMediaMessage, sendText, foiEnviadoPeloBot } from '../evolution/client.js';
 import { transcricaoAtiva, transcreverAudio } from '../agent/transcribe.js';
 import { handleLeadMessage } from '../core/conversation.js';
 
@@ -18,7 +18,27 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
 
     try {
       const msg = parseIncoming(payload);
-      if (!msg || msg.fromMe || msg.isGroup) return;
+      if (!msg || msg.isGroup) return;
+
+      // Mensagem enviada PELO número do escritório (fromMe):
+      // se não foi a Júria que enviou, foi o ADVOGADO digitando manualmente
+      // — a Júria pausa e deixa o humano assumir a conversa.
+      if (msg.fromMe) {
+        if (msg.texto && !foiEnviadoPeloBot(instance, msg.contato, msg.texto)) {
+          const tenant = await getTenantByInstance(instance);
+          if (tenant) {
+            const pausada = await pauseConversationByContact(tenant.id, msg.contato);
+            if (pausada) {
+              logger.info(
+                { instance, contato: msg.contato },
+                'Advogado assumiu a conversa — Júria pausada para este contato',
+              );
+            }
+          }
+        }
+        return;
+      }
+
       if (!msg.texto && !msg.isAudio) return; // ignora outros tipos de mídia
 
       const tenant = await getTenantByInstance(instance);

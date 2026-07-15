@@ -66,7 +66,27 @@ services:
     ports:
       - "8080:8080" # a Júria (rotas /admin e /webhook) em http://SEU_IP:8080
 
+  # -------- HTTPS (Caddy) --------
+  # Emite e renova o certificado sozinho (Let's Encrypt) para o domínio
+  # definido em DOMINIO no .env. Sem DOMINIO definido, fica inerte.
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    depends_on:
+      - juria
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
 volumes:
   postgres_data:
   redis_data:
   evolution_instances:
+  caddy_data:
+  caddy_config:

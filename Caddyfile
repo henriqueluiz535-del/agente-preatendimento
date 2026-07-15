@@ -1,0 +1,6 @@
+# Proxy HTTPS da Júria (Caddy).
+# O domínio vem da variável DOMINIO do .env — o certificado (cadeado)
+# é emitido e renovado automaticamente via Let's Encrypt.
+{$DOMINIO} {
+	reverse_proxy juria:8080
+}

@@ -17,6 +17,18 @@ interface CriarTenantBody {
   evolution_instance?: string;
 }
 
+/**
+ * Normaliza número de WhatsApp brasileiro: remove tudo que não é dígito e
+ * garante o DDI 55 (número local com DDD tem 10-11 dígitos).
+ */
+function normalizarWhatsapp(n?: string): string | null {
+  if (!n) return null;
+  const digitos = n.replace(/\D/g, '');
+  if (!digitos) return null;
+  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  return digitos;
+}
+
 function slugify(s: string): string {
   return s
     .toLowerCase()
@@ -66,7 +78,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         instrucoes_customizadas: body.instrucoes_customizadas ?? '',
         criterios_qualificacao: body.criterios_qualificacao ?? '',
         horario_atendimento: body.horario_atendimento ?? 'Segunda a sexta, das 9h às 18h',
-        whatsapp_advogado: body.whatsapp_advogado ?? null,
+        whatsapp_advogado: normalizarWhatsapp(body.whatsapp_advogado),
         evolution_instance: instance,
       });
 

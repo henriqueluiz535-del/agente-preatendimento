@@ -8,6 +8,8 @@ import {
   markLeadEncaminhado,
   setConversationStatus,
   touchLeadActivity,
+  ensureLead,
+  marcarEtapaQualificado,
 } from '../db/repositories.js';
 import { pensar } from '../agent/brain.js';
 import { sendText } from '../evolution/client.js';
@@ -50,6 +52,7 @@ export async function handleLeadMessage(
 
   await addMessage(conversa.id, 'user', texto);
   await touchLeadActivity(conversa.id); // zera o ciclo de follow-ups
+  await ensureLead(conversa.id, tenant.id, nomeContato); // entra no funil do CRM ("novo")
 
   const history = await getRecentMessages(conversa.id, 30);
   const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, history);
@@ -78,5 +81,6 @@ export async function handleLeadMessage(
     await notificarAdvogado(tenant, contato, lead);
     await markLeadEncaminhado(conversa.id);
     await setConversationStatus(conversa.id, 'encaminhado');
+    await marcarEtapaQualificado(conversa.id); // avança no funil do CRM
   }
 }

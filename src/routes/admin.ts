@@ -3,11 +3,13 @@ import { config } from '../config.js';
 import { logger } from '../logger.js';
 import { createTenant, getTenantByInstance, listTenants, listLeads } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState } from '../evolution/client.js';
+import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 
 interface CriarTenantBody {
   nome_escritorio: string;
   nome_advogado: string;
   nome_assistente?: string;
+  email_advogado?: string; // login do CRM (plug and play)
   areas?: string[];
   tom?: string;
   instrucoes_customizadas?: string;
@@ -82,13 +84,22 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         evolution_instance: instance,
       });
 
-      // 3. Busca o QR Code de conexão
+      // 3. Cria o acesso ao CRM (plug and play), se veio e-mail
+      let crm: { email: string; senha: string } | null = null;
+      if (body.email_advogado?.trim()) {
+        const senha = gerarSenhaAleatoria();
+        await criarUsuarioCrm(tenant.id, body.email_advogado, senha, body.nome_advogado);
+        crm = { email: body.email_advogado.trim().toLowerCase(), senha };
+      }
+
+      // 4. Busca o QR Code de conexão
       const qr = await connectInstance(instance);
 
       return reply.send({
         tenant: { id: tenant.id, evolution_instance: instance },
         // qr.base64 / qr.code dependendo da versão da Evolution — devolvemos tudo.
         qrcode: qr,
+        crm,
         instrucao: 'Peça ao advogado para escanear o QR Code no WhatsApp > Aparelhos conectados.',
       });
     } catch (err) {
@@ -108,6 +119,18 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { tenant_id } = req.query as { tenant_id?: string };
     const leads = await listLeads(tenant_id);
     return reply.send({ leads });
+  });
+
+  // Criar/redefinir acesso ao CRM de um tenant já existente
+  app.post('/admin/tenants/:instance/crm-user', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const { email } = (req.body ?? {}) as { email?: string };
+    if (!email?.trim()) return reply.code(400).send({ error: 'email é obrigatório' });
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    const senha = gerarSenhaAleatoria();
+    await criarUsuarioCrm(tenant.id, email, senha, tenant.nome_advogado);
+    return reply.send({ crm: { email: email.trim().toLowerCase(), senha } });
   });
 
   // Reemitir QR Code (caso expire antes de conectar)

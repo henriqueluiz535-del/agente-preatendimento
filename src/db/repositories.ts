@@ -220,6 +220,27 @@ export async function upsertLead(
   if (error) throw error;
 }
 
+/** Garante que existe uma linha de lead para a conversa (etapa "novo" no funil). */
+export async function ensureLead(conversationId: string, tenantId: string, nome?: string | null): Promise<void> {
+  const { error } = await db
+    .from('leads')
+    .upsert(
+      { conversation_id: conversationId, tenant_id: tenantId, ...(nome ? { nome } : {}) },
+      { onConflict: 'conversation_id', ignoreDuplicates: true },
+    );
+  if (error) throw error;
+}
+
+/** Avança a etapa do funil para "qualificado" (sem regredir etapas movidas pelo advogado). */
+export async function marcarEtapaQualificado(conversationId: string): Promise<void> {
+  const { error } = await db
+    .from('leads')
+    .update({ etapa: 'qualificado', updated_at: new Date().toISOString() })
+    .eq('conversation_id', conversationId)
+    .eq('etapa', 'novo');
+  if (error) throw error;
+}
+
 export async function markLeadEncaminhado(conversationId: string): Promise<void> {
   const { error } = await db
     .from('leads')

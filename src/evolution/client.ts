@@ -53,12 +53,23 @@ export function foiEnviadoPeloBot(instance: string, number: string, text: string
   return enviadosPeloBot.has(chaveEnvio(instance, number, text));
 }
 
+/**
+ * Converte formatação markdown que a IA possa emitir para o formato do
+ * WhatsApp: **negrito** -> *negrito*; remove títulos markdown (#).
+ */
+function paraFormatoWhatsApp(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/gs, '*$1*')
+    .replace(/^#{1,6}\s+/gm, '');
+}
+
 /** Envia uma mensagem de texto para um número/JID através de uma instância. */
 export async function sendText(instance: string, number: string, text: string): Promise<void> {
-  enviadosPeloBot.set(chaveEnvio(instance, number, text), Date.now() + TTL_ENVIO_MS);
+  const texto = paraFormatoWhatsApp(text);
+  enviadosPeloBot.set(chaveEnvio(instance, number, texto), Date.now() + TTL_ENVIO_MS);
   await evoFetch(`/message/sendText/${instance}`, {
     method: 'POST',
-    body: JSON.stringify({ number, text }),
+    body: JSON.stringify({ number, text: texto }),
   });
 }
 

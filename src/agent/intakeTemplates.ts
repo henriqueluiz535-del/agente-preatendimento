@@ -56,9 +56,10 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
     area: 'bancário / financiamentos e empréstimos',
     perguntas: [
       'O financiamento/empréstimo é de veículo, imóvel ou pessoal? Com qual banco/financeira?',
-      'Há quanto tempo foi feito e qual o valor da parcela?',
+      'Há quanto tempo foi feito?',
+      'Qual o valor da parcela? (ESSENCIAL — sempre pergunte)',
       'As parcelas estão em dia ou há atrasos?',
-      'A pessoa tem o contrato em mãos ou consegue acessá-lo (físico ou digital)?',
+      'A pessoa tem o contrato em mãos ou consegue acessá-lo (físico ou digital)? (ESSENCIAL — sempre pergunte)',
     ],
   },
   {

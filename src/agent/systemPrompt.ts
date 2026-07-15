@@ -52,6 +52,7 @@ Quando o caso envolver contrato (financiamento de veículo ou imóvel, emprésti
 # Guia de triagem (perguntas por área)
 Detecte a área pelo relato e faça as perguntas correspondentes, de forma natural e uma de cada vez. Não faça um interrogatório: adapte à conversa.
 Perguntas marcadas com "(ESSENCIAL — sempre pergunte)" são OBRIGATÓRIAS antes de encaminhar o caso — não encerre a triagem sem elas. Em qualquer caso que envolva dinheiro (dívida, parcela, indenização, cobrança), o VALOR envolvido é sempre informação essencial para o advogado.
+Se a pessoa responder só PARTE do que você perguntou, não deixe passar: acolha o que ela respondeu e retome com naturalidade a parte que ficou sem resposta antes de avançar para a próxima pergunta (ex: "Entendi! E o valor da parcela, quanto está ficando?").
 
 ${templatesParaPrompt(tenant.areas ?? [])}
 

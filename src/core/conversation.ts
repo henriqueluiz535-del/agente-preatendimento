@@ -70,8 +70,11 @@ export async function handleLeadMessage(
     });
   }
 
-  // Encaminhamento: notifica o advogado uma única vez
-  if (prontoParaEncaminhar && conversa.status !== 'encaminhado') {
+  // Encaminhamento: notifica o advogado uma única vez.
+  // Dispara tanto pela flag explícita quanto por qualificado=true — a IA às
+  // vezes marca só um dos dois, e um lead qualificado nunca pode se perder.
+  const deveEncaminhar = prontoParaEncaminhar || lead.qualificado === true;
+  if (deveEncaminhar && conversa.status !== 'encaminhado') {
     await notificarAdvogado(tenant, contato, lead);
     await markLeadEncaminhado(conversa.id);
     await setConversationStatus(conversa.id, 'encaminhado');

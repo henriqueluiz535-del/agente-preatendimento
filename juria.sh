@@ -9,6 +9,7 @@
 #   bash juria.sh reiniciar     -> reinicia a Júria
 #   bash juria.sh chave-claude  -> troca a chave da Anthropic (pergunta e valida)
 #   bash juria.sh chave-groq    -> troca a chave do Groq (áudio)
+#   bash juria.sh modelo        -> alterna o cérebro da Júria (haiku/sonnet)
 # ============================================================
 set -u
 cd "$(dirname "$0")"
@@ -79,7 +80,22 @@ case "${1:-ajuda}" in
     echo "✅ Chave do Groq gravada."
     aplicar_e_conferir
     ;;
+  modelo)
+    atual=$(grep '^ANTHROPIC_MODEL=' .env 2>/dev/null | cut -d= -f2)
+    echo "Modelo atual: ${atual:-claude-haiku-4-5}"
+    echo ""
+    echo "  1) claude-haiku-4-5  (mais barato e rápido — recomendado p/ triagem)"
+    echo "  2) claude-sonnet-5   (mais inteligente — ~3x o custo)"
+    printf "Escolha 1 ou 2 e aperte Enter: "
+    read -r opcao
+    case "$opcao" in
+      1) definir_env ANTHROPIC_MODEL "claude-haiku-4-5"; echo "✅ Modelo: Haiku 4.5" ;;
+      2) definir_env ANTHROPIC_MODEL "claude-sonnet-5"; echo "✅ Modelo: Sonnet" ;;
+      *) echo "Opção inválida. Nada foi alterado."; exit 1 ;;
+    esac
+    aplicar_e_conferir
+    ;;
   ajuda|*)
-    sed -n '2,12p' "$0"
+    sed -n '2,13p' "$0"
     ;;
 esac

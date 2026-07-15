@@ -98,14 +98,39 @@ tr:last-child td{border-bottom:none}
 .st.fec{background:rgba(62,207,142,.16);color:var(--ok)}
 .st.per{background:rgba(255,107,94,.13);color:var(--erro)}
 .lk{color:var(--dourado);font-weight:700;font-size:12px;white-space:nowrap}
-.sem{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sem{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 @media(max-width:820px){.sem{grid-template-columns:repeat(2,1fr)}}
 .dia{background:var(--card2);border:1px solid var(--linha);border-radius:11px;padding:9px;min-height:110px}
 .dia h5{margin:0 0 8px;font-size:10.5px;color:var(--muted);text-transform:uppercase}
 .dia h5 b{color:var(--texto);font-size:13px;display:block}
+.dia.fds{background:#101010}
 .ev{background:var(--card);border-left:3px solid var(--dourado);border-radius:7px;padding:6px 8px;font-size:11px;margin-bottom:6px}
 .ev b{display:block;font-size:11.5px}
 .ev.fu2{border-left-color:var(--azul)}
+/* seletor de visualização da agenda */
+.vsw{display:inline-flex;background:var(--card);border:1px solid var(--linha);border-radius:9px;overflow:hidden}
+.vsw button{background:none;border:none;color:var(--muted);font-weight:800;font-size:12.5px;padding:8px 14px;cursor:pointer;font-family:inherit}
+.vsw button.on{background:rgba(232,184,75,.14);color:var(--dourado)}
+/* visão MÊS */
+.wkhd{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.wkhd div{text-align:center;font-size:10.5px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;font-weight:800}
+.mes{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.mdia{background:var(--card2);border:1px solid var(--linha);border-radius:9px;min-height:76px;padding:6px}
+.mdia.fds{background:#101010}
+.mdia.vazio{background:transparent;border-color:transparent}
+.mdia.hoje{border-color:var(--dourado);box-shadow:0 0 0 1px var(--dourado)}
+.mdia .num{font-size:11px;font-weight:800;color:var(--muted)}
+.mdia.hoje .num{color:var(--dourado)}
+.evm{display:block;font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 5px;margin-top:4px;background:rgba(232,184,75,.16);color:var(--dourado);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evm.f{background:rgba(109,179,242,.14);color:var(--azul)}
+@media(max-width:700px){.mdia{min-height:56px}.evm{font-size:8.5px}}
+/* visão DIA */
+.diaview{max-width:560px}
+.hslot{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--linha)}
+.hslot:last-child{border-bottom:none}
+.hslot .h{width:52px;color:var(--muted);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.hslot .ev{flex:1;margin-bottom:0}
+.hslot .livre{flex:1;color:#555;font-size:11.5px;align-self:center}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
 .overlay.on{display:flex}
 .modalmock{max-width:430px;width:100%;background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:20px;max-height:92vh;overflow:auto}
@@ -249,15 +274,86 @@ tr:last-child td{border-bottom:none}
 
 <!-- AGENDA -->
 <section id="agenda">
-  <div class="row"><h2>Semana de 14 a 18/07</h2><div><button class="btn ghost">‹ anterior</button> <button class="btn ghost">próxima ›</button> <button class="btn">+ Agendar</button></div></div>
-  <div class="sem">
-    <div class="dia"><h5>SEG<b>14/07</b></h5></div>
-    <div class="dia"><h5>TER<b>15/07</b></h5><div class="ev fu2"><b>🔔 Follow-up</b>Maria Souza · 14h</div><div class="ev fu2"><b>🔔 Follow-up</b>Carlos Lima · 16h30</div></div>
-    <div class="dia"><h5>QUA<b>16/07</b></h5><div class="ev"><b>🤝 Reunião · Meet</b>João Pereira · 10h</div><div class="ev"><b>🤝 Reunião · Meet</b>Ana Beatriz · 15h30</div></div>
-    <div class="dia"><h5>QUI<b>17/07</b></h5><div class="ev fu2"><b>🔔 Follow-up</b>Paulo Siqueira · 9h</div></div>
-    <div class="dia"><h5>SEX<b>18/07</b></h5><div class="ev"><b>🤝 Reunião · presencial</b>Carlos Lima · 9h</div></div>
+  <div class="row">
+    <h2 id="agTitulo">Julho de 2026</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="vsw">
+        <button class="on" data-v="vMes">Mês</button>
+        <button data-v="vSem">Semana</button>
+        <button data-v="vDia">Dia</button>
+      </div>
+      <button class="btn ghost">‹</button> <button class="btn ghost">›</button>
+      <button class="btn">+ Agendar</button>
+    </div>
   </div>
-  <p class="mini">💡 Ao agendar, o advogado escolhe: reunião (Meet/presencial — o link do Meet ele cola do próprio Google) ou follow-up (lembrete de retorno). Os lembretes do dia aparecem no topo da Visão Geral.</p>
+
+  <!-- VISÃO MÊS (padrão) -->
+  <div id="vMes">
+    <div class="wkhd"><div>dom</div><div>seg</div><div>ter</div><div>qua</div><div>qui</div><div>sex</div><div>sáb</div></div>
+    <div class="mes">
+      <div class="mdia vazio"></div><div class="mdia vazio"></div><div class="mdia vazio"></div>
+      <div class="mdia"><span class="num">1</span></div>
+      <div class="mdia"><span class="num">2</span></div>
+      <div class="mdia"><span class="num">3</span></div>
+      <div class="mdia fds"><span class="num">4</span></div>
+      <div class="mdia fds"><span class="num">5</span></div>
+      <div class="mdia"><span class="num">6</span></div>
+      <div class="mdia"><span class="num">7</span></div>
+      <div class="mdia"><span class="num">8</span></div>
+      <div class="mdia"><span class="num">9</span></div>
+      <div class="mdia"><span class="num">10</span></div>
+      <div class="mdia fds"><span class="num">11</span></div>
+      <div class="mdia fds"><span class="num">12</span></div>
+      <div class="mdia"><span class="num">13</span></div>
+      <div class="mdia"><span class="num">14</span></div>
+      <div class="mdia hoje"><span class="num">15 · hoje</span><span class="evm f">🔔 14h Maria</span><span class="evm f">🔔 16h30 Carlos</span></div>
+      <div class="mdia"><span class="num">16</span><span class="evm">🤝 10h João</span><span class="evm">🤝 15h30 Ana</span></div>
+      <div class="mdia"><span class="num">17</span><span class="evm f">🔔 9h Paulo</span></div>
+      <div class="mdia fds"><span class="num">18</span><span class="evm">🤝 9h Carlos</span></div>
+      <div class="mdia fds"><span class="num">19</span></div>
+      <div class="mdia"><span class="num">20</span></div>
+      <div class="mdia"><span class="num">21</span></div>
+      <div class="mdia"><span class="num">22</span><span class="evm">🤝 11h Luciana</span></div>
+      <div class="mdia"><span class="num">23</span></div>
+      <div class="mdia"><span class="num">24</span></div>
+      <div class="mdia fds"><span class="num">25</span></div>
+      <div class="mdia fds"><span class="num">26</span><span class="evm">🤝 17h Beatriz</span></div>
+      <div class="mdia"><span class="num">27</span></div>
+      <div class="mdia"><span class="num">28</span></div>
+      <div class="mdia"><span class="num">29</span></div>
+      <div class="mdia"><span class="num">30</span></div>
+      <div class="mdia"><span class="num">31</span></div>
+      <div class="mdia vazio"></div>
+    </div>
+  </div>
+
+  <!-- VISÃO SEMANA -->
+  <div id="vSem" style="display:none">
+    <div class="sem">
+      <div class="dia fds"><h5>DOM<b>12/07</b></h5></div>
+      <div class="dia"><h5>SEG<b>13/07</b></h5></div>
+      <div class="dia"><h5>TER<b>14/07</b></h5></div>
+      <div class="dia"><h5>QUA<b>15/07 · hoje</b></h5><div class="ev fu2"><b>🔔 Follow-up</b>Maria Souza · 14h</div><div class="ev fu2"><b>🔔 Follow-up</b>Carlos Lima · 16h30</div></div>
+      <div class="dia"><h5>QUI<b>16/07</b></h5><div class="ev"><b>🤝 Reunião · Meet</b>João Pereira · 10h</div><div class="ev"><b>🤝 Reunião · Meet</b>Ana Beatriz · 15h30</div></div>
+      <div class="dia"><h5>SEX<b>17/07</b></h5><div class="ev fu2"><b>🔔 Follow-up</b>Paulo Siqueira · 9h</div></div>
+      <div class="dia fds"><h5>SÁB<b>18/07</b></h5><div class="ev"><b>🤝 Reunião · presencial</b>Carlos Lima · 9h</div></div>
+    </div>
+  </div>
+
+  <!-- VISÃO DIA -->
+  <div id="vDia" style="display:none">
+    <div class="card diaview">
+      <h3>Quinta-feira, 16/07 <small>· 2 compromissos</small></h3>
+      <div class="hslot"><div class="h">09h</div><div class="livre">— livre —</div></div>
+      <div class="hslot"><div class="h">10h</div><div class="ev"><b>🤝 Reunião · Meet</b>João Pereira · (82) 99871-3344 · previdenciário</div></div>
+      <div class="hslot"><div class="h">11h</div><div class="livre">— livre —</div></div>
+      <div class="hslot"><div class="h">14h</div><div class="livre">— livre —</div></div>
+      <div class="hslot"><div class="h">15h30</div><div class="ev"><b>🤝 Reunião · Meet</b>Ana Beatriz · (82) 98765-1020 · família</div></div>
+      <div class="hslot"><div class="h">17h</div><div class="livre">— livre —</div></div>
+    </div>
+  </div>
+
+  <p class="mini" style="margin-top:12px">💡 Visualização padrão: <b style="color:var(--dourado)">mês inteiro</b>, com sábados e domingos (reunião acontece em fim de semana também). Alterne para Semana ou Dia nos botões acima. Ao agendar: reunião (Meet/presencial — o link do Meet ele cola do próprio Google) ou follow-up (lembrete). Os lembretes do dia aparecem no topo da Visão Geral.</p>
 </section>
 
 </main>
@@ -294,6 +390,16 @@ document.querySelectorAll('.nav button').forEach(function(b){
     b.classList.add('on');
     document.getElementById(b.dataset.t).classList.add('on');
     window.scrollTo({top:0});
+  });
+});
+var tituloAgenda = { vMes: 'Julho de 2026', vSem: 'Semana de 12 a 18/07', vDia: 'Quinta-feira, 16/07' };
+document.querySelectorAll('.vsw button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.vsw button').forEach(function(x){x.classList.remove('on')});
+    ['vMes','vSem','vDia'].forEach(function(id){document.getElementById(id).style.display='none'});
+    b.classList.add('on');
+    document.getElementById(b.dataset.v).style.display='block';
+    document.getElementById('agTitulo').textContent = tituloAgenda[b.dataset.v];
   });
 });
 document.getElementById('abreFechamento').addEventListener('click', function(){

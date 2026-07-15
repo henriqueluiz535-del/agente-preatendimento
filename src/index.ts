@@ -4,6 +4,7 @@ import { logger } from './logger.js';
 import { webhookRoutes } from './routes/webhook.js';
 import { adminRoutes } from './routes/admin.js';
 import { painelRoutes } from './routes/painel.js';
+import { maqueteRoutes } from './routes/maquete.js';
 import { iniciarFollowups } from './core/followups.js';
 
 async function main(): Promise<void> {
@@ -14,6 +15,7 @@ async function main(): Promise<void> {
   await app.register(webhookRoutes);
   await app.register(adminRoutes);
   await app.register(painelRoutes);
+  await app.register(maqueteRoutes);
 
   await app.listen({ port: config.port, host: '0.0.0.0' });
   logger.info(`Agente de pré-atendimento no ar na porta ${config.port}`);

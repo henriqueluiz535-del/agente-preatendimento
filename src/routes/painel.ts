@@ -204,10 +204,12 @@ async function carregarLeads(){
     const {leads}=await api('/admin/leads'+(tid?('?tenant_id='+tid):''));
     if(!leads.length){el.innerHTML='<div class="vazio">Nenhum lead ainda. Assim que a Júria atender, eles aparecem aqui.</div>';return}
     el.innerHTML=\`<table class="tabela"><thead><tr>
-      <th>Nome</th><th>Área</th><th>Urgência</th><th>Resumo</th><th>Contato</th><th>Status</th></tr></thead><tbody>\`+
+      <th>Chegada</th><th>Nome</th><th>Área</th><th>Urgência</th><th>Resumo</th><th>Contato</th><th>Status</th></tr></thead><tbody>\`+
       leads.map(l=>{
         const c=l.conversations||{}; const u=(l.urgencia||'').toLowerCase();
+        const chegada=l.created_at?new Date(l.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
         return \`<tr>
+          <td style="white-space:nowrap">\${chegada}</td>
           <td>\${esc(l.nome||'—')}</td>
           <td>\${esc(l.area_juridica||'—')}</td>
           <td>\${u?'<span class="urg '+esc(u)+'">'+esc(u)+'</span>':'—'}</td>

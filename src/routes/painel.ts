@@ -290,17 +290,9 @@ function abrirExcluir(inst){
     '<button class="fechar" onclick="fecharModal()">×</button>'+
     '<h3>Excluir escritório</h3>'+
     '<div class="aviso" style="border-color:rgba(255,107,94,.5);background:rgba(255,107,94,.08);color:#ffb3ab">Isso desconecta o WhatsApp e remove <b>'+esc(nome)+'</b> do painel. A Júria deixa de atender esse escritório. O histórico de leads e conversas fica guardado.</div>'+
-    '<label>Para confirmar, digite o nome do escritório: <b style="color:var(--dourado)">'+esc(nome)+'</b></label>'+
-    '<input id="x_conf" autocomplete="off" placeholder="Digite exatamente como está acima" oninput="checarExclusao()"/>'+
     '<div class="erroMsg" id="x_erro"></div>'+
-    '<button class="btn danger" style="width:100%;margin-top:14px" id="x_btn" disabled onclick="confirmarExclusao()">Excluir definitivamente</button>'+
+    '<button class="btn danger" style="width:100%;margin-top:14px" id="x_btn" onclick="confirmarExclusao()">Excluir definitivamente</button>'+
     '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="fecharModal()">Cancelar</button>');
-}
-function checarExclusao(){
-  const t=TENANTS.find(function(x){return x.evolution_instance===EXCLUIR})||{};
-  const digitado=document.getElementById('x_conf').value.trim().toLowerCase();
-  const esperado=(t.nome_escritorio||'').trim().toLowerCase();
-  document.getElementById('x_btn').disabled=!(esperado&&digitado===esperado);
 }
 async function confirmarExclusao(){
   const b=document.getElementById('x_btn');b.disabled=true;b.textContent='Excluindo…';

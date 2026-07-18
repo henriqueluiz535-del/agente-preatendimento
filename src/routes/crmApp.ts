@@ -226,8 +226,6 @@ var NOVIDADES=[
   'Ícones novos na navegação, com visual mais profissional',
   'Agenda com filtro por status: pendentes, realizadas e não compareceu',
   'Registro do motivo ao marcar uma venda como perdida (inteligência comercial)',
-  'Lembretes na visão geral: reuniões de hoje, follow-ups e contatos parados',
-  'Gráficos de vendas por dia e reuniões realizadas por dia no painel',
   'Coluna de chegada e status por extenso na lista de leads',
   'Esta área de Novidades, para você acompanhar cada atualização do sistema'
  ]},
@@ -307,24 +305,16 @@ function abrirModal(html){document.getElementById('modal').innerHTML='<div class
 function renderPainel(dias){
   var el=document.getElementById('vw-painel');
   el.innerHTML='<div class="vazio">Carregando…</div>';
-  Promise.all([api('/api/crm/dashboard?dias='+dias),carregarLeads().catch(function(){return []})]).then(function(res){
-    var d=res[0];
+  api('/api/crm/dashboard?dias='+dias).then(function(d){
     var k=d.kpis,h='';
     h+='<div class="row"><h2>Painel de controle</h2><select style="max-width:170px" onchange="renderPainel(this.value)">';
     [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].forEach(function(o){
       h+='<option value="'+o[0]+'"'+(Number(dias)===o[0]?' selected':'')+'>'+o[1]+'</option>'});
     h+='</select></div>';
-    // ---- lembretes do dia / pendências ----
+    // lembretes de follow-up de hoje
     var hoje=new Date().toISOString().slice(0,10);
     var fups=(d.reunioes_semana||[]).filter(function(e){return e.tipo==='followup'&&String(e.inicio).slice(0,10)===hoje});
-    var reunHoje=(d.reunioes_semana||[]).filter(function(e){return e.tipo!=='followup'&&String(e.inicio).slice(0,10)===hoje});
-    var tresDias=Date.now()-3*86400000;
-    var parados=LEADS.filter(function(l){
-      var et=l.etapa||'novo';
-      return ['qualificado','reuniao','proposta','negociacao'].indexOf(et)>=0&&new Date(l.updated_at).getTime()<tresDias});
-    if(reunHoje.length)h+='<div class="pop">'+SBELL+' <b>'+reunHoje.length+' reunião(ões) hoje:</b> '+reunHoje.map(function(e){return esc(e.titulo)+' às '+new Date(e.inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}).join(' · ')+'</div>';
     if(fups.length)h+='<div class="pop">'+SBELL+' <b>'+fups.length+' follow-up(s) hoje:</b> '+fups.map(function(e){return esc(e.titulo)}).join(' · ')+'</div>';
-    if(parados.length)h+='<div class="pop">'+SBELL+' <b>'+parados.length+' contato(s) sem atualização há 3+ dias:</b> '+parados.slice(0,5).map(function(l){return esc(l.nome||'(sem nome)')}).join(' · ')+(parados.length>5?' e mais '+(parados.length-5)+'…':'')+' — vale dar um retorno.</div>';
     h+='<div class="kpis">';
     [[k.leads_novos,'Leads novos'],[k.em_triagem,'Em triagem'],[k.reunioes_agendadas,'Reuniões agendadas'],[k.reunioes_realizadas,'Reuniões realizadas'],[k.fechadas,'Vendas fechadas'],[k.tempo_medio_min+'min','Tempo médio triagem']].forEach(function(x){
       h+='<div class="kpi"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>'});
@@ -346,24 +336,6 @@ function renderPainel(dias){
       h+='<div class="meet"><div class="dt"><b>'+dt.getDate()+'</b><small>'+dt.toLocaleDateString('pt-BR',{weekday:'short'})+'</small></div>'+
          '<div><b>'+esc(e.titulo)+'</b><div class="mini">'+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+esc(e.local||'')+'</div></div></div>'});
     h+='</div></div>';
-    // vendas por dia + reuniões realizadas por dia
-    var sv=d.serie_vendas||[],sr=d.serie_reunioes||[];
-    var maxV=Math.max.apply(null,sv.map(function(s){return s.total}).concat([1]));
-    var maxR=Math.max.apply(null,sr.map(function(s){return s.total}).concat([1]));
-    var passoV=Math.max(1,Math.ceil(sv.length/15));
-    h+='<div class="g2"><div class="card chartwrap"><h3>Vendas por dia <small>· honorários iniciais fechados</small></h3><div class="chart">';
-    sv.forEach(function(s,i){
-      var alt=Math.round(s.total/maxV*100);
-      var lbl=(i%passoV===0)?s.dia.slice(8,10)+'/'+s.dia.slice(5,7):'';
-      var vlbl=s.total?(s.total>=1000?Math.round(s.total/1000)+'k':s.total):'';
-      h+='<div class="bar" style="height:'+Math.max(alt,3)+'%"><span>'+vlbl+'</span><i>'+lbl+'</i></div>'});
-    h+='</div></div>';
-    h+='<div class="card chartwrap"><h3>Reuniões realizadas por dia</h3><div class="chart">';
-    sr.forEach(function(s,i){
-      var alt=Math.round(s.total/maxR*100);
-      var lbl=(i%passoV===0)?s.dia.slice(8,10)+'/'+s.dia.slice(5,7):'';
-      h+='<div class="bar" style="height:'+Math.max(alt,3)+'%"><span>'+(s.total||'')+'</span><i>'+lbl+'</i></div>'});
-    h+='</div></div></div>';
     // honorários + origem
     var ho=d.honorarios;
     h+='<div class="g2"><div class="card"><h3>Retorno no período</h3><div class="hono">'+

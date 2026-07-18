@@ -106,6 +106,16 @@ export async function connectionState(instanceName: string): Promise<any> {
   return evoFetch(`/instance/connectionState/${instanceName}`, { method: 'GET' });
 }
 
+/** Desconecta o WhatsApp da instância (logout) sem apagar a instância. */
+export async function logoutInstance(instanceName: string): Promise<any> {
+  return evoFetch(`/instance/logout/${instanceName}`, { method: 'DELETE' });
+}
+
+/** Apaga a instância no Evolution (usado ao excluir um escritório). */
+export async function deleteInstance(instanceName: string): Promise<any> {
+  return evoFetch(`/instance/delete/${instanceName}`, { method: 'DELETE' });
+}
+
 /** Baixa uma mídia (ex: áudio) em base64 a partir do ID da mensagem. */
 export async function getBase64FromMediaMessage(
   instance: string,

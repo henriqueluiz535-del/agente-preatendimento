@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads } from '../db/repositories.js';
-import { createInstance, connectInstance, connectionState } from '../evolution/client.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, desativarTenant } from '../db/repositories.js';
+import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 
 interface CriarTenantBody {
@@ -74,7 +74,8 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       const tenant = await createTenant({
         nome_escritorio: body.nome_escritorio,
         nome_advogado: body.nome_advogado,
-        nome_assistente: body.nome_assistente?.trim() || 'Júria',
+        // O nome da assistente é padronizado: Júria em todos os escritórios.
+        nome_assistente: 'Júria',
         areas: body.areas ?? [],
         tom: body.tom ?? 'cordial, profissional e acolhedor',
         instrucoes_customizadas: body.instrucoes_customizadas ?? '',
@@ -147,5 +148,42 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { instance } = req.params as { instance: string };
     const state = await connectionState(instance);
     return reply.send(state);
+  });
+
+  // Desconectar o WhatsApp (logout) sem excluir o escritório.
+  // Para reconectar, basta gerar um novo QR em "Conectar / QR".
+  app.post('/admin/tenants/:instance/disconnect', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    try {
+      await logoutInstance(instance);
+      return reply.send({ ok: true });
+    } catch (err) {
+      logger.error({ err, instance }, 'Falha ao desconectar o WhatsApp da instância');
+      return reply.code(500).send({ error: 'falha ao desconectar', detalhe: String(err) });
+    }
+  });
+
+  // Excluir escritório: desconecta o WhatsApp, apaga a instância no Evolution
+  // e desativa o tenant. O histórico (leads/conversas) permanece no banco.
+  app.delete('/admin/tenants/:instance', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    try {
+      await logoutInstance(instance);
+    } catch (err) {
+      // Instância pode já estar desconectada — segue a exclusão.
+      logger.warn({ err, instance }, 'Logout falhou durante exclusão (seguindo)');
+    }
+    try {
+      await deleteInstance(instance);
+    } catch (err) {
+      logger.warn({ err, instance }, 'Delete da instância falhou durante exclusão (seguindo)');
+    }
+    await desativarTenant(tenant.id);
+    logger.info({ instance, tenant: tenant.nome_escritorio }, 'Escritório excluído (tenant desativado)');
+    return reply.send({ ok: true });
   });
 }

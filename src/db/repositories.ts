@@ -24,9 +24,19 @@ export async function listTenants(): Promise<any[]> {
   const { data, error } = await db
     .from('tenants')
     .select('id, nome_escritorio, nome_advogado, nome_assistente, areas, whatsapp_advogado, evolution_instance, ativo, created_at')
+    .eq('ativo', true)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+/**
+ * Desativa (soft delete) um tenant: a Júria para de atender, o escritório
+ * some do painel, mas o histórico (leads, conversas) permanece no banco.
+ */
+export async function desativarTenant(tenantId: string): Promise<void> {
+  const { error } = await db.from('tenants').update({ ativo: false }).eq('id', tenantId);
+  if (error) throw error;
 }
 
 export async function listLeads(tenantId?: string): Promise<any[]> {

@@ -43,6 +43,8 @@ const HTML = /* html */ `<!doctype html>
   .btn:disabled{opacity:.6;cursor:default}
   .btn.ghost{background:transparent;border:1px solid var(--linha);color:var(--dourado);font-weight:700}
   .btn.ghost:hover{background:#1f1f1f}
+  .btn.danger{background:transparent;border:1px solid rgba(255,107,94,.55);color:var(--erro);font-weight:700}
+  .btn.danger:hover{background:rgba(255,107,94,.12)}
   .btn.sm{padding:7px 12px;font-size:13px}
   /* Cards */
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
@@ -177,6 +179,8 @@ async function carregarAdv(){
         <div class="acoes">
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
+          <button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
+          <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>
         </div>
       </div>\`).join('');
     tenants.forEach(t=>verificarStatus(t.evolution_instance));
@@ -231,7 +235,6 @@ function abrirNovo(){
     <p class="muted">Ao cadastrar, geramos o WhatsApp e o QR Code para conectar.</p>
     <label>Nome do escritório *</label><input id="f_esc" placeholder="Ex: Silva Advocacia"/>
     <label>Nome do advogado(a) *</label><input id="f_adv" placeholder="Ex: Dra. Ana Silva"/>
-    <label>Nome da assistente</label><input id="f_ass" value="Júria"/>
     <label>Áreas (separadas por vírgula, opcional)</label><input id="f_areas" placeholder="previdenciário, trabalhista"/>
     <label>WhatsApp p/ receber leads (DDI+DDD, opcional)</label><input id="f_wpp" placeholder="5511999998888"/>
     <div class="erroMsg" id="f_erro"></div>
@@ -244,7 +247,6 @@ async function salvarNovo(){
   const body={
     nome_escritorio:document.getElementById('f_esc').value.trim(),
     nome_advogado:document.getElementById('f_adv').value.trim(),
-    nome_assistente:document.getElementById('f_ass').value.trim()||'Júria',
     areas, whatsapp_advogado:document.getElementById('f_wpp').value.trim()||undefined,
   };
   if(!body.nome_escritorio||!body.nome_advogado){document.getElementById('f_erro').textContent='Preencha escritório e advogado.';b.disabled=false;b.textContent='Cadastrar e gerar QR';return}
@@ -267,6 +269,49 @@ function mostrarQR(qr,titulo){
     <div class="aviso">No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
     <button class="btn ghost" style="width:100%" onclick="fecharModal()">Fechar</button>\`;
   abrirModal(body);
+}
+
+async function desconectar(inst){
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
+  const nome=t.nome_escritorio||inst;
+  if(!confirm('Desconectar o WhatsApp de "'+nome+'"?\\n\\nA Júria para de atender esse escritório até alguém conectar de novo pelo QR Code.'))return;
+  try{
+    await api('/admin/tenants/'+inst+'/disconnect',{method:'POST'});
+    verificarStatus(inst);
+  }catch(e){alert('Erro ao desconectar: '+e.message)}
+}
+
+let EXCLUIR=null;
+function abrirExcluir(inst){
+  EXCLUIR=inst;
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
+  const nome=t.nome_escritorio||inst;
+  abrirModal(
+    '<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Excluir escritório</h3>'+
+    '<div class="aviso" style="border-color:rgba(255,107,94,.5);background:rgba(255,107,94,.08);color:#ffb3ab">Isso desconecta o WhatsApp e remove <b>'+esc(nome)+'</b> do painel. A Júria deixa de atender esse escritório. O histórico de leads e conversas fica guardado.</div>'+
+    '<label>Para confirmar, digite o nome do escritório: <b style="color:var(--dourado)">'+esc(nome)+'</b></label>'+
+    '<input id="x_conf" autocomplete="off" placeholder="Digite exatamente como está acima" oninput="checarExclusao()"/>'+
+    '<div class="erroMsg" id="x_erro"></div>'+
+    '<button class="btn danger" style="width:100%;margin-top:14px" id="x_btn" disabled onclick="confirmarExclusao()">Excluir definitivamente</button>'+
+    '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="fecharModal()">Cancelar</button>');
+}
+function checarExclusao(){
+  const t=TENANTS.find(function(x){return x.evolution_instance===EXCLUIR})||{};
+  const digitado=document.getElementById('x_conf').value.trim().toLowerCase();
+  const esperado=(t.nome_escritorio||'').trim().toLowerCase();
+  document.getElementById('x_btn').disabled=!(esperado&&digitado===esperado);
+}
+async function confirmarExclusao(){
+  const b=document.getElementById('x_btn');b.disabled=true;b.textContent='Excluindo…';
+  try{
+    await api('/admin/tenants/'+EXCLUIR,{method:'DELETE'});
+    fecharModal();
+    carregarAdv();
+  }catch(e){
+    document.getElementById('x_erro').textContent='Erro: '+e.message;
+    b.disabled=false;b.textContent='Excluir definitivamente';
+  }
 }
 
 function iniciar(){

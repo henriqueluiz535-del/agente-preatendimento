@@ -55,7 +55,8 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
   {
     area: 'bancário / financiamentos e empréstimos',
     perguntas: [
-      'O financiamento/empréstimo é de veículo, imóvel ou pessoal? Com qual banco/financeira?',
+      'É FINANCIAMENTO ou CONSÓRCIO? (ESSENCIAL — consórcio não tem juros e não se enquadra em revisão de juros; ver regras de enquadramento)',
+      'Se financiamento: de veículo, imóvel ou pessoal? Com qual banco/financeira?',
       'Há quanto tempo foi feito?',
       'Qual o valor da parcela? (ESSENCIAL — sempre pergunte)',
       'As parcelas estão em dia ou há atrasos?',

@@ -88,7 +88,7 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       if (!ETAPAS.includes(b.etapa)) return reply.code(400).send({ error: 'etapa inválida' });
       patch.etapa = b.etapa;
     }
-    for (const campo of ['notas', 'origem', 'nome', 'area_juridica', 'urgencia'] as const) {
+    for (const campo of ['notas', 'origem', 'nome', 'area_juridica', 'urgencia', 'motivo_perda'] as const) {
       if (b[campo] !== undefined) patch[campo] = b[campo];
     }
     const { error } = await db.from('leads').update(patch).eq('id', id).eq('tenant_id', u.tenant_id);
@@ -169,7 +169,7 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     const { id } = req.params as { id: string };
     const b = (req.body ?? {}) as any;
     const patch: Record<string, unknown> = {};
-    for (const c of ['titulo', 'inicio', 'local', 'notas', 'tipo', 'concluido'] as const) {
+    for (const c of ['titulo', 'inicio', 'local', 'notas', 'tipo', 'concluido', 'status'] as const) {
       if (b[c] !== undefined) patch[c] = b[c];
     }
     const { error } = await db.from('crm_eventos').update(patch).eq('id', id).eq('tenant_id', u.tenant_id);
@@ -249,7 +249,7 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     try {
       const [leadsQ, eventosQ, fechQ, conversasQ] = await Promise.all([
         db.from('leads').select('id, etapa, created_at, origem').eq('tenant_id', u.tenant_id).gte('created_at', deISO),
-        db.from('crm_eventos').select('*, leads(nome)').eq('tenant_id', u.tenant_id).eq('tipo', 'reuniao'),
+        db.from('crm_eventos').select('*, leads(nome)').eq('tenant_id', u.tenant_id),
         db.from('crm_fechamentos').select('*').eq('tenant_id', u.tenant_id).gte('created_at', deISO),
         db
           .from('conversations')
@@ -271,16 +271,22 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
         serie.push({ dia: chave, total });
       }
 
-      // Reuniões futuras (próximos 7 dias) e realizadas no período
+      // Status efetivo de um evento (compatível com registros antigos sem coluna status)
+      const statusEv = (e: any): string => e.status ?? (e.concluido ? 'realizada' : 'pendente');
+      const soReunioes = eventos.filter((e: any) => e.tipo !== 'followup');
+
+      // Próximos eventos (7 dias) — inclui follow-ups para os lembretes do painel
       const emSeteDias = new Date(agora.getTime() + 7 * 86400_000);
       const reunioesFuturas = eventos
-        .filter((e: any) => !e.concluido && new Date(e.inicio) >= agora && new Date(e.inicio) <= emSeteDias)
+        .filter((e: any) => statusEv(e) === 'pendente' && new Date(e.inicio) >= agora && new Date(e.inicio) <= emSeteDias)
         .sort((a: any, b: any) => a.inicio.localeCompare(b.inicio))
-        .slice(0, 8);
-      const reunioesAgendadas = eventos.filter((e: any) => !e.concluido && new Date(e.inicio) >= agora).length;
-      const reunioesRealizadas = eventos.filter(
-        (e: any) => (e.concluido || new Date(e.inicio) < agora) && new Date(e.inicio) >= de,
+        .slice(0, 12);
+      const reunioesAgendadas = soReunioes.filter(
+        (e: any) => statusEv(e) === 'pendente' && new Date(e.inicio) >= agora,
       ).length;
+      const reuniaoRealizada = (e: any): boolean =>
+        statusEv(e) !== 'nao_compareceu' && (e.concluido || statusEv(e) === 'realizada' || new Date(e.inicio) < agora);
+      const reunioesRealizadas = soReunioes.filter((e: any) => reuniaoRealizada(e) && new Date(e.inicio) >= de).length;
 
       // Tempo médio de triagem (1º ao último contato do lead)
       const duracoes = conversas
@@ -289,6 +295,24 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       const tempoMedioMin = duracoes.length
         ? Math.round(duracoes.reduce((a: number, b: number) => a + b, 0) / duracoes.length / 60000)
         : 0;
+
+      // Séries diárias: vendas (R$ de honorários iniciais fechados) e reuniões realizadas
+      const serieVendas: { dia: string; total: number }[] = [];
+      const serieReunioes: { dia: string; total: number }[] = [];
+      for (let i = nDias - 1; i >= 0; i--) {
+        const d = new Date(agora.getTime() - i * 86400_000);
+        const chave = d.toISOString().slice(0, 10);
+        serieVendas.push({
+          dia: chave,
+          total: fech
+            .filter((f: any) => (f.created_at ?? '').slice(0, 10) === chave)
+            .reduce((acc: number, f: any) => acc + Number(f.honorario_inicial ?? 0), 0),
+        });
+        serieReunioes.push({
+          dia: chave,
+          total: soReunioes.filter((e: any) => reuniaoRealizada(e) && (e.inicio ?? '').slice(0, 10) === chave).length,
+        });
+      }
 
       // Honorários
       const soma = (campo: string) => fech.reduce((acc: number, f: any) => acc + Number(f[campo] ?? 0), 0);
@@ -307,6 +331,8 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
           tempo_medio_min: tempoMedioMin,
         },
         serie,
+        serie_vendas: serieVendas,
+        serie_reunioes: serieReunioes,
         reunioes_semana: reunioesFuturas,
         honorarios: {
           inicial_total: soma('honorario_inicial'),

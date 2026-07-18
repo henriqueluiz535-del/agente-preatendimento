@@ -160,6 +160,20 @@ tbody tr:hover{background:#1d1d1d}
 .modal h3{margin:0 0 4px;font-size:17px;font-weight:800}
 .modal .fechar{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
 .duo{display:flex;gap:8px}.duo>*{flex:1}
+/* ícones / novidades / login extra / status agenda */
+aside button.mi svg{flex-shrink:0;opacity:.9}
+.novdot{width:8px;height:8px;border-radius:50%;background:var(--erro);display:inline-block;margin-left:auto;animation:pisca 1.1s infinite}
+@keyframes pisca{0%,100%{opacity:1}50%{opacity:.15}}
+.tagline{font-size:12.5px;color:var(--muted);margin:2px 0 18px}
+.lgfoot{margin-top:18px;font-size:11px;color:var(--muted);line-height:2}
+.lgfoot .online{color:var(--ok);font-weight:800;display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.lgfoot .online i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;font-style:normal}
+.novlist{margin:0;padding-left:18px;font-size:13px}
+.novlist li{margin:5px 0}
+.evm.re,.ev.re{opacity:.5}
+.evm.nc,.ev.nc{background:rgba(255,107,94,.13);color:var(--erro);text-decoration:line-through}
+.ev.nc{border-left-color:var(--erro)}
+.dotleg{width:9px;height:9px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px}
 </style>
 </head>
 <body>
@@ -167,22 +181,28 @@ tbody tr:hover{background:#1d1d1d}
 <div id="telaLogin" class="login">
   <div class="box">
     <div class="logoH">H</div>
-    <b>HENRIQUECER</b><span class="sub">CRM Jurídico · Júria</span>
-    <label>E-mail</label><input id="lEmail" type="email" placeholder="seu@email.com"/>
+    <b>HENRIQUECER</b><span class="sub">CRM</span>
+    <p class="tagline">Gestão completa do comercial do seu escritório</p>
+    <label>E-mail</label><input id="lEmail" type="text" placeholder="advogado@seuescritorio.com"/>
     <label>Senha</label><input id="lSenha" type="password" placeholder="••••••••"/>
     <div class="erroMsg" id="lErro"></div>
-    <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Entrar</button>
+    <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
+    <div class="lgfoot">
+      <span class="online"><i></i>Sistema online</span><br/>
+      Ambiente seguro · HENRIQUECER · v1.1.0
+    </div>
   </div>
 </div>
 
 <div id="telaApp" class="app hidden">
   <aside>
     <div class="marca"><b><i>H</i>ENRIQUECER</b><span>CRM Jurídico</span></div>
-    <button class="mi on" data-v="painel" onclick="irPara('painel')">📊 Painel de controle</button>
-    <button class="mi" data-v="funil" onclick="irPara('funil')">🎯 Funil</button>
-    <button class="mi" data-v="leads" onclick="irPara('leads')">👥 Leads</button>
-    <button class="mi" data-v="conversas" onclick="irPara('conversas')">💬 Conversas</button>
-    <button class="mi" data-v="agenda" onclick="irPara('agenda')">📅 Agenda</button>
+    <button class="mi on" data-v="painel" onclick="irPara('painel')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Painel de controle</button>
+    <button class="mi" data-v="funil" onclick="irPara('funil')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>Funil</button>
+    <button class="mi" data-v="leads" onclick="irPara('leads')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads</button>
+    <button class="mi" data-v="conversas" onclick="irPara('conversas')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Conversas</button>
+    <button class="mi" data-v="agenda" onclick="irPara('agenda')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
+    <button class="mi" data-v="novidades" onclick="irPara('novidades')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Novidades<span id="novDot" class="novdot hidden"></span></button>
     <div class="rodape"><b id="uNome"></b><span id="uEsc"></span><br/><button class="sair" onclick="sair()">Sair</button></div>
   </aside>
   <div class="conteudo">
@@ -191,6 +211,7 @@ tbody tr:hover{background:#1d1d1d}
     <div id="vw-leads" class="hidden"></div>
     <div id="vw-conversas" class="hidden"></div>
     <div id="vw-agenda" class="hidden"></div>
+    <div id="vw-novidades" class="hidden"></div>
   </div>
 </div>
 
@@ -199,8 +220,28 @@ tbody tr:hover{background:#1d1d1d}
 <script>
 // =============== infra ===============
 var TK='crm_token';
+var VERSAO='1.1.0';
+var NOVIDADES=[
+ {v:'1.1.0',data:'18/07/2026',titulo:'Visual profissional e mais controle',itens:[
+  'Ícones novos na navegação, com visual mais profissional',
+  'Agenda com filtro por status: pendentes, realizadas e não compareceu',
+  'Registro do motivo ao marcar uma venda como perdida (inteligência comercial)',
+  'Lembretes na visão geral: reuniões de hoje, follow-ups e contatos parados',
+  'Gráficos de vendas por dia e reuniões realizadas por dia no painel',
+  'Coluna de chegada e status por extenso na lista de leads',
+  'Esta área de Novidades, para você acompanhar cada atualização do sistema'
+ ]},
+ {v:'1.0.0',data:'15/07/2026',titulo:'Lançamento do CRM',itens:[
+  'Funil de vendas com arrastar e soltar',
+  'Painel de controle com KPIs, honorários e origem dos fechamentos',
+  'Conversas da Júria integradas ao CRM',
+  'Agenda com visões de mês, semana e dia'
+ ]}
+];
+var SBELL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
 var LEADS=[]; var ORIGENS=['anúncio','indicação']; var EVENTOS=[];
-var ETAPAS=[['novo','Novo'],['qualificado','Qualificado'],['reuniao','Reunião agendada'],['proposta','Proposta enviada'],['negociacao','Negociação'],['fechado','✅ Fechado'],['perdido','Perdido']];
+var ETAPAS=[['novo','Novo'],['qualificado','Qualificado'],['reuniao','Reunião agendada'],['proposta','Proposta enviada'],['negociacao','Negociação'],['fechado','Venda fechada'],['perdido','Venda perdida']];
+function etLabel(e){var f=ETAPAS.filter(function(x){return x[0]===e});return f.length?f[0][1]:(e||'novo')}
 function tk(){return localStorage.getItem(TK)||''}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function dinheiro(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}
@@ -229,16 +270,34 @@ function iniciar(){
   document.getElementById('uNome').textContent=localStorage.getItem('crm_nome')||'';
   document.getElementById('uEsc').textContent=localStorage.getItem('crm_esc')||'';
   api('/api/crm/origens').then(function(d){ORIGENS=d.origens}).catch(function(){});
+  atualizarNovDot();
   irPara('painel');
+}
+function atualizarNovDot(){
+  var d=document.getElementById('novDot');
+  if(d)d.classList.toggle('hidden',localStorage.getItem('crm_nov_visto')===VERSAO);
 }
 function irPara(v){
   document.querySelectorAll('aside .mi').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
-  ['painel','funil','leads','conversas','agenda'].forEach(function(x){document.getElementById('vw-'+x).classList.toggle('hidden',x!==v)});
+  ['painel','funil','leads','conversas','agenda','novidades'].forEach(function(x){document.getElementById('vw-'+x).classList.toggle('hidden',x!==v)});
   if(v==='painel')renderPainel(7);
   if(v==='funil')carregarLeads().then(renderFunil);
   if(v==='leads')carregarLeads().then(renderLeads);
   if(v==='conversas')carregarLeads().then(renderConversas);
   if(v==='agenda')renderAgenda();
+  if(v==='novidades')renderNovidades();
+}
+function renderNovidades(){
+  localStorage.setItem('crm_nov_visto',VERSAO);
+  atualizarNovDot();
+  var el=document.getElementById('vw-novidades');
+  var h='<div class="row"><h2>Novidades</h2><span class="chip">Versão atual: v'+VERSAO+'</span></div>';
+  h+='<p class="mini" style="margin:0 0 14px">Tudo o que o seu CRM ganhou de novo, atualização por atualização.</p>';
+  NOVIDADES.forEach(function(n){
+    h+='<div class="card" style="margin-bottom:12px"><h3>v'+n.v+' — '+esc(n.titulo)+' <small>· '+n.data+'</small></h3><ul class="novlist">';
+    n.itens.forEach(function(i){h+='<li>'+esc(i)+'</li>'});
+    h+='</ul></div>'});
+  el.innerHTML=h;
 }
 function carregarLeads(){return api('/api/crm/leads').then(function(d){LEADS=d.leads;return LEADS})}
 function fecharModal(){document.getElementById('modal').innerHTML=''}
@@ -248,16 +307,24 @@ function abrirModal(html){document.getElementById('modal').innerHTML='<div class
 function renderPainel(dias){
   var el=document.getElementById('vw-painel');
   el.innerHTML='<div class="vazio">Carregando…</div>';
-  api('/api/crm/dashboard?dias='+dias).then(function(d){
+  Promise.all([api('/api/crm/dashboard?dias='+dias),carregarLeads().catch(function(){return []})]).then(function(res){
+    var d=res[0];
     var k=d.kpis,h='';
     h+='<div class="row"><h2>Painel de controle</h2><select style="max-width:170px" onchange="renderPainel(this.value)">';
     [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].forEach(function(o){
       h+='<option value="'+o[0]+'"'+(Number(dias)===o[0]?' selected':'')+'>'+o[1]+'</option>'});
     h+='</select></div>';
-    // lembretes de follow-up de hoje
+    // ---- lembretes do dia / pendências ----
     var hoje=new Date().toISOString().slice(0,10);
     var fups=(d.reunioes_semana||[]).filter(function(e){return e.tipo==='followup'&&String(e.inicio).slice(0,10)===hoje});
-    if(fups.length)h+='<div class="pop">🔔 <b>'+fups.length+' follow-up(s) hoje:</b> '+fups.map(function(e){return esc(e.titulo)}).join(' · ')+'</div>';
+    var reunHoje=(d.reunioes_semana||[]).filter(function(e){return e.tipo!=='followup'&&String(e.inicio).slice(0,10)===hoje});
+    var tresDias=Date.now()-3*86400000;
+    var parados=LEADS.filter(function(l){
+      var et=l.etapa||'novo';
+      return ['qualificado','reuniao','proposta','negociacao'].indexOf(et)>=0&&new Date(l.updated_at).getTime()<tresDias});
+    if(reunHoje.length)h+='<div class="pop">'+SBELL+' <b>'+reunHoje.length+' reunião(ões) hoje:</b> '+reunHoje.map(function(e){return esc(e.titulo)+' às '+new Date(e.inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}).join(' · ')+'</div>';
+    if(fups.length)h+='<div class="pop">'+SBELL+' <b>'+fups.length+' follow-up(s) hoje:</b> '+fups.map(function(e){return esc(e.titulo)}).join(' · ')+'</div>';
+    if(parados.length)h+='<div class="pop">'+SBELL+' <b>'+parados.length+' contato(s) sem atualização há 3+ dias:</b> '+parados.slice(0,5).map(function(l){return esc(l.nome||'(sem nome)')}).join(' · ')+(parados.length>5?' e mais '+(parados.length-5)+'…':'')+' — vale dar um retorno.</div>';
     h+='<div class="kpis">';
     [[k.leads_novos,'Leads novos'],[k.em_triagem,'Em triagem'],[k.reunioes_agendadas,'Reuniões agendadas'],[k.reunioes_realizadas,'Reuniões realizadas'],[k.fechadas,'Vendas fechadas'],[k.tempo_medio_min+'min','Tempo médio triagem']].forEach(function(x){
       h+='<div class="kpi"><div class="n">'+x[0]+'</div><div class="l">'+x[1]+'</div></div>'});
@@ -273,18 +340,36 @@ function renderPainel(dias){
     h+='</div></div>';
     h+='<div class="card"><h3>Próximas reuniões <small>· 7 dias</small></h3>';
     var reunioes=(d.reunioes_semana||[]).filter(function(e){return e.tipo!=='followup'});
-    if(!reunioes.length)h+='<div class="mini" style="padding:14px 0">Nenhuma reunião agendada. Use a Agenda pra marcar. 📅</div>';
+    if(!reunioes.length)h+='<div class="mini" style="padding:14px 0">Nenhuma reunião agendada. Use a Agenda pra marcar.</div>';
     reunioes.forEach(function(e){
       var dt=new Date(e.inicio);
       h+='<div class="meet"><div class="dt"><b>'+dt.getDate()+'</b><small>'+dt.toLocaleDateString('pt-BR',{weekday:'short'})+'</small></div>'+
          '<div><b>'+esc(e.titulo)+'</b><div class="mini">'+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+esc(e.local||'')+'</div></div></div>'});
     h+='</div></div>';
+    // vendas por dia + reuniões realizadas por dia
+    var sv=d.serie_vendas||[],sr=d.serie_reunioes||[];
+    var maxV=Math.max.apply(null,sv.map(function(s){return s.total}).concat([1]));
+    var maxR=Math.max.apply(null,sr.map(function(s){return s.total}).concat([1]));
+    var passoV=Math.max(1,Math.ceil(sv.length/15));
+    h+='<div class="g2"><div class="card chartwrap"><h3>Vendas por dia <small>· honorários iniciais fechados</small></h3><div class="chart">';
+    sv.forEach(function(s,i){
+      var alt=Math.round(s.total/maxV*100);
+      var lbl=(i%passoV===0)?s.dia.slice(8,10)+'/'+s.dia.slice(5,7):'';
+      var vlbl=s.total?(s.total>=1000?Math.round(s.total/1000)+'k':s.total):'';
+      h+='<div class="bar" style="height:'+Math.max(alt,3)+'%"><span>'+vlbl+'</span><i>'+lbl+'</i></div>'});
+    h+='</div></div>';
+    h+='<div class="card chartwrap"><h3>Reuniões realizadas por dia</h3><div class="chart">';
+    sr.forEach(function(s,i){
+      var alt=Math.round(s.total/maxR*100);
+      var lbl=(i%passoV===0)?s.dia.slice(8,10)+'/'+s.dia.slice(5,7):'';
+      h+='<div class="bar" style="height:'+Math.max(alt,3)+'%"><span>'+(s.total||'')+'</span><i>'+lbl+'</i></div>'});
+    h+='</div></div></div>';
     // honorários + origem
     var ho=d.honorarios;
-    h+='<div class="g2"><div class="card"><h3>💰 Retorno no período</h3><div class="hono">'+
+    h+='<div class="g2"><div class="card"><h3>Retorno no período</h3><div class="hono">'+
       '<div class="h green"><div class="v">'+dinheiro(ho.inicial_recebido)+'</div><div class="t">Iniciais recebidos</div></div>'+
       '<div class="h gold"><div class="v">'+dinheiro(ho.inicial_total-ho.inicial_recebido)+'</div><div class="t">A receber</div></div>'+
-      '<div class="h gold"><div class="v">'+dinheiro(ho.finais_estimados)+'</div><div class="t">Estimativa de finais ✨</div></div>'+
+      '<div class="h gold"><div class="v">'+dinheiro(ho.finais_estimados)+'</div><div class="t">Estimativa de finais</div></div>'+
       '<div class="h"><div class="v">'+ho.contratos+'</div><div class="t">Contratos fechados</div></div></div></div>';
     h+='<div class="card"><h3>Origem dos fechamentos</h3><div class="orig">';
     var tot=Object.values(d.origens).reduce(function(a,b){return a+b},0);
@@ -313,7 +398,7 @@ function renderFunil(){
       if(l.resumo_caso)h+='<div class="m">'+esc(String(l.resumo_caso).slice(0,90))+'</div>';
       h+='</div>'});
     h+='</div>'});
-  h+='</div><p class="mini">💡 Arraste os cards entre as colunas. As duas primeiras a Júria move sozinha. Clique num card para ver a conversa e anotar.</p>';
+  h+='</div><p class="mini">Arraste os cards entre as colunas. As duas primeiras a Júria move sozinha. Clique num card para ver a conversa e anotar.</p>';
   el.innerHTML=h;
 }
 function soltarLead(ev,colEl){
@@ -322,6 +407,7 @@ function soltarLead(ev,colEl){
   var lead=LEADS.find(function(l){return l.id===id});
   if(!lead||lead.etapa===etapa)return;
   if(etapa==='fechado'){modalFechamento(lead);return}
+  if(etapa==='perdido'){modalPerda(lead);return}
   api('/api/crm/leads/'+id,{method:'PATCH',body:JSON.stringify({etapa:etapa})})
     .then(function(){lead.etapa=etapa;renderFunil()})
     .catch(function(e){alert('Erro: '+e.message)});
@@ -330,11 +416,12 @@ function abrirLead(id){
   var l=LEADS.find(function(x){return x.id===id});if(!l)return;
   var c=l.conversations||{};
   var h='<button class="fechar" onclick="fecharModal()">×</button><h3>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</h3>';
-  h+='<div class="mini">'+esc(l.area_juridica||'área não identificada')+(c.contato?' · 📱 '+esc(c.contato):'')+' · origem: '+esc(l.origem||'anúncio')+'</div>';
+  h+='<div class="mini">'+esc(l.area_juridica||'área não identificada')+(c.contato?' · '+esc(c.contato):'')+' · origem: '+esc(l.origem||'anúncio')+'</div>';
   if(l.resumo_caso)h+='<p style="font-size:13px">'+esc(l.resumo_caso)+'</p>';
-  h+='<label>Anotações</label><textarea id="nts" rows="3">'+esc(l.notas||'')+'</textarea>';
-  h+='<div class="duo" style="margin-top:10px"><button class="btn sm" onclick="salvarNotas(\\''+l.id+'\\')">Salvar anotações</button>'+
-     '<button class="btn ghost sm" onclick="modalAgendar(\\''+l.id+'\\')">📅 Agendar</button></div>';
+  if(l.motivo_perda)h+='<div class="pop" style="border-color:rgba(255,107,94,.4);background:rgba(255,107,94,.08)"><b style="color:var(--erro)">Motivo da perda:</b> '+esc(l.motivo_perda)+'</div>';
+  h+='<label>Observações (contexto pra reunião, detalhes do caso…)</label><textarea id="nts" rows="3">'+esc(l.notas||'')+'</textarea>';
+  h+='<div class="duo" style="margin-top:10px"><button class="btn sm" onclick="salvarNotas(\\''+l.id+'\\')">Salvar observações</button>'+
+     '<button class="btn ghost sm" onclick="modalAgendar(\\''+l.id+'\\')">Agendar</button></div>';
   h+='<div id="convBox" style="margin-top:14px" class="mini">Carregando conversa…</div>';
   abrirModal(h);
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
@@ -367,8 +454,25 @@ function salvarNovoLead(){
     .then(function(){fecharModal();carregarLeads().then(renderFunil)})
     .catch(function(e){document.getElementById('nl_erro').textContent='Erro: '+e.message});
 }
+function modalPerda(lead){
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Venda perdida — '+esc(lead.nome||'(sem nome)')+'</h3>'+
+  '<p class="mini">Registre o motivo: isso vira inteligência comercial do escritório.</p>'+
+  '<label>Motivo *</label><select id="p_mot"><option>Sem retorno / sumiu</option><option>Achou caro</option><option>Fechou com outro advogado</option><option>Caso sem viabilidade</option><option>Desistiu</option><option>Outro</option></select>'+
+  '<label>Detalhes (opcional)</label><textarea id="p_obs" rows="2" placeholder="Ex: disse que vai pensar e não respondeu mais"></textarea>'+
+  '<div class="erroMsg" id="p_erro"></div>'+
+  '<button class="btn" style="width:100%;margin-top:12px" onclick="salvarPerda(\\''+lead.id+'\\')">Registrar perda</button>';
+  abrirModal(h);
+}
+function salvarPerda(id){
+  var mot=document.getElementById('p_mot').value;
+  var obs=document.getElementById('p_obs').value.trim();
+  var motivo=mot+(obs?' — '+obs:'');
+  api('/api/crm/leads/'+id,{method:'PATCH',body:JSON.stringify({etapa:'perdido',motivo_perda:motivo})})
+    .then(function(){fecharModal();carregarLeads().then(renderFunil)})
+    .catch(function(e){document.getElementById('p_erro').textContent='Erro: '+e.message});
+}
 function modalFechamento(lead){
-  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>🎉 Fechou com '+esc(lead.nome||'este lead')+'!</h3>'+
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Fechou com '+esc(lead.nome||'este lead')+'!</h3>'+
   '<p class="mini">Registre os honorários para acompanhar seu retorno.</p>'+
   '<label>Honorários iniciais (cobrado)</label><input id="f_ini" type="number" placeholder="2500"/>'+
   '<label>Já recebido</label><input id="f_rec" type="number" placeholder="1000"/>'+
@@ -399,17 +503,19 @@ function salvarFechamento(id){
 // =============== LEADS (lista) ===============
 function renderLeads(){
   var el=document.getElementById('vw-leads'),h='';
-  h+='<div class="row"><h2>Leads</h2><div class="duo"><input id="busca" placeholder="🔎 Buscar…" style="max-width:220px" oninput="renderLeads()"/>'+
+  h+='<div class="row"><h2>Leads</h2><div class="duo"><input id="busca" placeholder="Buscar nome, área ou contato…" style="max-width:230px" oninput="renderLeads()"/>'+
      '<button class="btn" onclick="modalNovoLead()">+ Novo</button></div></div>';
   var q=(document.getElementById('busca')||{}).value;q=(q||'').toLowerCase();
   var lista=LEADS.filter(function(l){var c=l.conversations||{};
     return !q||String(l.nome||'').toLowerCase().includes(q)||String(l.area_juridica||'').toLowerCase().includes(q)||String(c.contato||'').includes(q)});
-  h+='<div class="twrap"><table><thead><tr><th>Nome</th><th>Contato</th><th>Origem</th><th>Área</th><th>Etapa</th><th>Atualizado</th></tr></thead><tbody>';
-  if(!lista.length)h+='<tr><td colspan="6" class="vazio">Nenhum lead ainda.</td></tr>';
+  h+='<div class="twrap"><table><thead><tr><th>Nome</th><th>Contato</th><th>Chegada</th><th>Origem</th><th>Área</th><th>Status</th><th>Atualizado</th></tr></thead><tbody>';
+  if(!lista.length)h+='<tr><td colspan="7" class="vazio">Nenhum lead ainda.</td></tr>';
   lista.forEach(function(l){var c=l.conversations||{};
+    var chegada=l.created_at?new Date(l.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     h+='<tr onclick="abrirLead(\\''+l.id+'\\')"><td><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b></td><td>'+esc(c.contato||(l.dados&&l.dados.contato_manual)||'—')+'</td>'+
+       '<td class="mini" style="white-space:nowrap">'+chegada+'</td>'+
        '<td>'+esc(l.origem||'anúncio')+'</td><td>'+esc(l.area_juridica||'—')+'</td>'+
-       '<td><span class="st '+esc(l.etapa||'novo')+'">'+esc(l.etapa||'novo')+'</span></td>'+
+       '<td><span class="st '+esc(l.etapa||'novo')+'">'+esc(etLabel(l.etapa))+'</span></td>'+
        '<td class="mini">'+new Date(l.updated_at).toLocaleDateString('pt-BR')+'</td></tr>'});
   h+='</tbody></table></div>';
   el.innerHTML=h;
@@ -426,7 +532,7 @@ function renderConversas(){
   comConversa.forEach(function(l){var c=l.conversations||{};
     h+='<div class="convitem" data-id="'+l.id+'" onclick="abrirChat(\\''+l.id+'\\')"><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b>'+
        '<small>'+esc(l.area_juridica||'')+' · '+esc(c.status||'')+'</small></div>'});
-  h+='</div><div class="chat" id="cchat"><div class="vazio">Selecione uma conversa ao lado. 💬</div></div></div>';
+  h+='</div><div class="chat" id="cchat"><div class="vazio">Selecione uma conversa ao lado.</div></div></div>';
   el.innerHTML=h;
 }
 function abrirChat(id){
@@ -442,7 +548,18 @@ function abrirChat(id){
 }
 
 // =============== AGENDA ===============
-var AG={modo:'mes',ref:new Date()};
+var AG={modo:'mes',ref:new Date(),filtro:'todos'};
+function stEv(e){return e.status||(e.concluido?'realizada':'pendente')}
+function setFiltroAg(f){AG.filtro=f;desenharAgenda()}
+function evVisivel(e){
+  var s=stEv(e);
+  if(AG.filtro==='todos')return true;
+  if(AG.filtro==='pendentes')return s==='pendente';
+  if(AG.filtro==='realizadas')return s==='realizada';
+  if(AG.filtro==='faltas')return s==='nao_compareceu';
+  return true;
+}
+function clsEv(e){var s=stEv(e);return (s==='realizada'?' re':'')+(s==='nao_compareceu'?' nc':'')}
 function renderAgenda(){
   var ini,fim,ref=AG.ref;
   ini=new Date(ref.getFullYear(),ref.getMonth()-1,1);fim=new Date(ref.getFullYear(),ref.getMonth()+2,1);
@@ -460,7 +577,7 @@ function mudarAgenda(delta){
 function setModo(m){AG.modo=m;desenharAgenda()}
 function evsDoDia(d){
   var chave=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  return EVENTOS.filter(function(e){var x=new Date(e.inicio);
+  return EVENTOS.filter(function(e){if(!evVisivel(e))return false;var x=new Date(e.inicio);
     return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')===chave});
 }
 function desenharAgenda(){
@@ -475,6 +592,10 @@ function desenharAgenda(){
      '<button class="'+(AG.modo==='dia'?'on':'')+'" onclick="setModo(\\'dia\\')">Dia</button></div>'+
      '<button class="btn ghost sm" onclick="mudarAgenda(-1)">‹</button><button class="btn ghost sm" onclick="mudarAgenda(1)">›</button>'+
      '<button class="btn" onclick="modalAgendar()">+ Agendar</button></div></div>';
+  h+='<div class="row" style="margin-top:-4px"><div class="vsw">'+
+     [['todos','Todos'],['pendentes','Pendentes'],['realizadas','Realizadas'],['faltas','Não compareceu']].map(function(f){
+       return '<button class="'+(AG.filtro===f[0]?'on':'')+'" onclick="setFiltroAg(\\''+f[0]+'\\')">'+f[1]+'</button>'}).join('')+
+     '</div></div>';
   var hojeStr=new Date().toDateString();
   if(AG.modo==='mes'){
     h+='<div class="wkhd"><div>dom</div><div>seg</div><div>ter</div><div>qua</div><div>qui</div><div>sex</div><div>sáb</div></div><div class="mes">';
@@ -487,7 +608,7 @@ function desenharAgenda(){
       h+='<div class="'+cls+'"><span class="num">'+dnum+(d.toDateString()===hojeStr?' · hoje':'')+'</span>';
       evsDoDia(d).forEach(function(e){
         var hh=new Date(e.inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        h+='<span class="evm'+(e.tipo==='followup'?' f':'')+'" onclick="abrirEvento(\\''+e.id+'\\')">'+(e.tipo==='followup'?'🔔':'🤝')+' '+hh+' '+esc(e.titulo)+'</span>'});
+        h+='<span class="evm'+(e.tipo==='followup'?' f':'')+clsEv(e)+'" onclick="abrirEvento(\\''+e.id+'\\')">'+hh+' '+esc(e.titulo)+'</span>'});
       h+='</div>'}
     h+='</div>';
   }
@@ -500,7 +621,7 @@ function desenharAgenda(){
       h+='<div class="dia7'+((j===0||j===6)?' fds':'')+'"><h5>'+nomes[j]+'<b>'+dj.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+(dj.toDateString()===hojeStr?' · hoje':'')+'</b></h5>';
       evsDoDia(dj).forEach(function(e){
         var hh=new Date(e.inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        h+='<div class="ev'+(e.tipo==='followup'?' f':'')+'" onclick="abrirEvento(\\''+e.id+'\\')"><b>'+(e.tipo==='followup'?'🔔 Follow-up':'🤝 Reunião')+'</b>'+esc(e.titulo)+' · '+hh+'</div>'});
+        h+='<div class="ev'+(e.tipo==='followup'?' f':'')+clsEv(e)+'" onclick="abrirEvento(\\''+e.id+'\\')"><b>'+(e.tipo==='followup'?'Follow-up':'Reunião')+'</b>'+esc(e.titulo)+' · '+hh+'</div>'});
       h+='</div>'}
     h+='</div>';
   }
@@ -510,17 +631,17 @@ function desenharAgenda(){
     if(!lista.length)h+='<div class="vazio">Nenhum compromisso neste dia. 🍃</div>';
     lista.forEach(function(e){
       var hh=new Date(e.inicio).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      h+='<div class="ev'+(e.tipo==='followup'?' f':'')+'" style="margin-bottom:10px" onclick="abrirEvento(\\''+e.id+'\\')"><b>'+hh+' · '+(e.tipo==='followup'?'🔔 Follow-up':'🤝 Reunião · '+esc(e.local||''))+'</b>'+esc(e.titulo)+(e.notas?'<div class="mini">'+esc(e.notas)+'</div>':'')+'</div>'});
+      h+='<div class="ev'+(e.tipo==='followup'?' f':'')+clsEv(e)+'" style="margin-bottom:10px" onclick="abrirEvento(\\''+e.id+'\\')"><b>'+hh+' · '+(e.tipo==='followup'?'Follow-up':'Reunião · '+esc(e.local||''))+'</b>'+esc(e.titulo)+(e.notas?'<div class="mini">'+esc(e.notas)+'</div>':'')+'</div>'});
     h+='</div>';
   }
-  h+='<p class="mini" style="margin-top:12px">🟡 reuniões · 🔵 follow-ups · clique num evento para concluir/excluir</p>';
+  h+='<p class="mini" style="margin-top:12px"><span class="dotleg" style="background:var(--dourado)"></span>reuniões · <span class="dotleg" style="background:var(--azul)"></span>follow-ups · <span class="dotleg" style="background:var(--erro)"></span>não compareceu · clique num evento para atualizar o status</p>';
   el.innerHTML=h;
 }
 function modalAgendar(leadId){
   var opts='<option value="">— sem vínculo —</option>'+LEADS.map(function(l){
     return '<option value="'+l.id+'"'+(l.id===leadId?' selected':'')+'>'+esc(l.nome||'(sem nome)')+'</option>'}).join('');
   var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Agendar</h3>'+
-  '<label>Tipo</label><select id="a_tipo"><option value="reuniao">🤝 Reunião</option><option value="followup">🔔 Follow-up (lembrete)</option></select>'+
+  '<label>Tipo</label><select id="a_tipo"><option value="reuniao">Reunião</option><option value="followup">Follow-up (lembrete)</option></select>'+
   '<label>Título *</label><input id="a_tit" placeholder="Reunião com João Pereira"/>'+
   '<label>Lead</label><select id="a_lead">'+opts+'</select>'+
   '<div class="duo"><div><label>Data *</label><input id="a_data" type="date"/></div><div><label>Hora *</label><input id="a_hora" type="time"/></div></div>'+
@@ -541,16 +662,20 @@ function salvarEvento(){
 }
 function abrirEvento(id){
   var e=EVENTOS.find(function(x){return x.id===id});if(!e)return;
-  var dt=new Date(e.inicio);
-  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>'+(e.tipo==='followup'?'🔔 Follow-up':'🤝 Reunião')+'</h3>'+
-  '<p><b>'+esc(e.titulo)+'</b><br/><span class="mini">'+dt.toLocaleString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+esc(e.local||'')+'</span></p>'+
+  var dt=new Date(e.inicio);var s=stEv(e);
+  var rot={pendente:'Pendente',realizada:'Realizada',nao_compareceu:'Não compareceu'};
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>'+(e.tipo==='followup'?'Follow-up':'Reunião')+'</h3>'+
+  '<p><b>'+esc(e.titulo)+'</b><br/><span class="mini">'+dt.toLocaleString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+esc(e.local||'')+' · status: <b>'+rot[s]+'</b></span></p>'+
   (e.notas?'<p class="mini">'+esc(e.notas)+'</p>':'')+
-  '<div class="duo"><button class="btn sm" onclick="concluirEvento(\\''+e.id+'\\')">'+(e.concluido?'Concluído ✓':'Marcar concluído')+'</button>'+
+  '<div class="duo">'+
+  (s!=='realizada'?'<button class="btn sm" onclick="marcarEvento(\\''+e.id+'\\',\\'realizada\\')">Realizada</button>':'')+
+  (e.tipo!=='followup'&&s!=='nao_compareceu'?'<button class="btn ghost sm" onclick="marcarEvento(\\''+e.id+'\\',\\'nao_compareceu\\')">Não compareceu</button>':'')+
+  (s!=='pendente'?'<button class="btn ghost sm" onclick="marcarEvento(\\''+e.id+'\\',\\'pendente\\')">Reabrir</button>':'')+
   '<button class="btn ghost sm" style="color:var(--erro);border-color:var(--erro)" onclick="excluirEvento(\\''+e.id+'\\')">Excluir</button></div>';
   abrirModal(h);
 }
-function concluirEvento(id){
-  api('/api/crm/eventos/'+id,{method:'PATCH',body:JSON.stringify({concluido:true})}).then(function(){fecharModal();renderAgenda()}).catch(function(e){alert(e.message)});
+function marcarEvento(id,s){
+  api('/api/crm/eventos/'+id,{method:'PATCH',body:JSON.stringify({status:s,concluido:s==='realizada'})}).then(function(){fecharModal();renderAgenda()}).catch(function(e){alert(e.message)});
 }
 function excluirEvento(id){
   if(!confirm('Excluir este compromisso?'))return;

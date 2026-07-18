@@ -276,7 +276,7 @@ async function desconectar(inst){
   const nome=t.nome_escritorio||inst;
   if(!confirm('Desconectar o WhatsApp de "'+nome+'"?\\n\\nA Júria para de atender esse escritório até alguém conectar de novo pelo QR Code.'))return;
   try{
-    await api('/admin/tenants/'+inst+'/disconnect',{method:'POST'});
+    await api('/admin/tenants/'+inst+'/disconnect',{method:'POST',body:'{}'});
     verificarStatus(inst);
   }catch(e){alert('Erro ao desconectar: '+e.message)}
 }
@@ -297,7 +297,7 @@ function abrirExcluir(inst){
 async function confirmarExclusao(){
   const b=document.getElementById('x_btn');b.disabled=true;b.textContent='Excluindo…';
   try{
-    await api('/admin/tenants/'+EXCLUIR,{method:'DELETE'});
+    await api('/admin/tenants/'+EXCLUIR,{method:'DELETE',body:'{}'});
     fecharModal();
     carregarAdv();
   }catch(e){

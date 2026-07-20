@@ -28,16 +28,20 @@ export async function pensar(tenant: Tenant, history: Message[]): Promise<BrainR
   const leadAcc: RegistrarLeadInput = {};
   let prontoParaEncaminhar = false;
   const textos: string[] = [];
+  let usoFinal: Anthropic.Usage | null = null;
 
   // Loop agêntico: continua enquanto a IA pedir ferramentas.
   for (let i = 0; i < 5; i++) {
     const response = await anthropic.messages.create({
       model: config.anthropic.model,
       max_tokens: 1024,
-      system,
+      // cache_control no system: o prefixo (ferramentas + prompt) é idêntico em
+      // toda chamada do tenant, então é servido do cache (~90% mais barato).
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
       tools: [registrarLeadTool],
       messages,
     });
+    usoFinal = response.usage;
 
     // Coleta texto e chamadas de ferramenta desta resposta
     const toolResults: Anthropic.ToolResultBlockParam[] = [];
@@ -71,7 +75,17 @@ export async function pensar(tenant: Tenant, history: Message[]): Promise<BrainR
     textos.join('\n\n').trim() ||
     'Obrigado pela mensagem! Já registrei aqui e em breve retornamos. 🙏';
 
-  logger.info({ tenant: tenant.evolution_instance, lead: leadAcc, prontoParaEncaminhar }, 'Resposta da IA gerada');
+  logger.info(
+    {
+      tenant: tenant.evolution_instance,
+      lead: leadAcc,
+      prontoParaEncaminhar,
+      cache_lido: usoFinal?.cache_read_input_tokens ?? 0,
+      cache_gravado: usoFinal?.cache_creation_input_tokens ?? 0,
+      tokens_sem_cache: usoFinal?.input_tokens ?? 0,
+    },
+    'Resposta da IA gerada',
+  );
   return { reply, lead: leadAcc, prontoParaEncaminhar };
 }
 

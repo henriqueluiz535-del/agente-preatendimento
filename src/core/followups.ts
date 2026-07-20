@@ -33,6 +33,7 @@ import {
 } from '../db/repositories.js';
 import { sendText } from '../evolution/client.js';
 import { buildSystemPrompt } from '../agent/systemPrompt.js';
+import { registrarLeadTool } from '../agent/tools.js';
 import type { Tenant } from '../db/types.js';
 
 // Minutos após o último contato do lead para cada tentativa.
@@ -122,7 +123,10 @@ async function gerarMensagem(
     const response = await anthropic.messages.create({
       model: config.anthropic.model,
       max_tokens: 300,
-      system: buildSystemPrompt(tenant),
+      // Mesmo prefixo (ferramentas + system) das chamadas de conversa do tenant,
+      // para reaproveitar o MESMO cache — a instrução proíbe usar a ferramenta.
+      system: [{ type: 'text' as const, text: buildSystemPrompt(tenant), cache_control: { type: 'ephemeral' as const } }],
+      tools: [registrarLeadTool],
       messages: [
         ...historico.map((m) => ({ role: m.role, content: m.content })),
         { role: 'user' as const, content: `[instrução interna da plataforma — o cliente NÃO enviou mensagem] ${instrucao}` },

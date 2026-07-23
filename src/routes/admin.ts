@@ -4,6 +4,7 @@ import { logger } from '../logger.js';
 import { createTenant, getTenantByInstance, listTenants, listLeads, desativarTenant, updateTenant } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
+import { gerarConvite } from '../crm/convite.js';
 
 interface CriarTenantBody {
   nome_escritorio: string;
@@ -132,6 +133,16 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const senha = gerarSenhaAleatoria();
     await criarUsuarioCrm(tenant.id, email, senha, tenant.nome_advogado);
     return reply.send({ crm: { email: email.trim().toLowerCase(), senha } });
+  });
+
+  // Link de convite para o advogado criar o próprio acesso ao CRM (válido 7 dias)
+  app.get('/admin/tenants/:instance/convite', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    const token = gerarConvite(tenant.id);
+    const host = req.headers.host ?? 'juria.henriquecerdigital.com';
+    return reply.send({ link: `https://${host}/crm?convite=${token}`, validade_dias: 7 });
   });
 
   // Reemitir QR Code (caso expire antes de conectar)

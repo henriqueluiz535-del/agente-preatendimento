@@ -1,7 +1,8 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/client.js';
 import { logger } from '../logger.js';
-import { login, usuarioPorToken, type CrmUsuario } from '../crm/auth.js';
+import { login, usuarioPorToken, criarUsuarioCrm, type CrmUsuario } from '../crm/auth.js';
+import { validarConvite } from '../crm/convite.js';
 
 // Etapas válidas do funil
 const ETAPAS = ['novo', 'qualificado', 'reuniao', 'proposta', 'negociacao', 'fechado', 'perdido'];
@@ -37,6 +38,44 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (err) {
       logger.error({ err }, 'Erro no login do CRM');
+      return reply.code(500).send({ error: 'erro interno' });
+    }
+  });
+
+  // ---------- Cadastro por convite (o advogado cria o próprio acesso) ----------
+  app.post('/api/crm/registrar', async (req, reply) => {
+    const { convite, email, senha } = (req.body ?? {}) as {
+      convite?: string;
+      email?: string;
+      senha?: string;
+    };
+    if (!convite || !email?.trim() || !senha) {
+      return reply.code(400).send({ error: 'informe e-mail e senha' });
+    }
+    if (senha.length < 6) {
+      return reply.code(400).send({ error: 'a senha precisa ter pelo menos 6 caracteres' });
+    }
+    const tenantId = validarConvite(convite);
+    if (!tenantId) {
+      return reply.code(400).send({ error: 'convite inválido ou expirado — peça um novo link' });
+    }
+    try {
+      const { data: tenant } = await db
+        .from('tenants')
+        .select('nome_escritorio, nome_advogado, ativo')
+        .eq('id', tenantId)
+        .maybeSingle();
+      if (!tenant?.ativo) return reply.code(400).send({ error: 'escritório não encontrado' });
+      await criarUsuarioCrm(tenantId, email, senha, tenant.nome_advogado);
+      const result = await login(email, senha);
+      if (!result) return reply.code(500).send({ error: 'erro ao criar o acesso' });
+      return reply.send({
+        token: result.token,
+        nome: result.usuario.nome ?? tenant.nome_advogado ?? '',
+        escritorio: tenant.nome_escritorio ?? '',
+      });
+    } catch (err) {
+      logger.error({ err }, 'Erro no cadastro por convite');
       return reply.code(500).send({ error: 'erro interno' });
     }
   });

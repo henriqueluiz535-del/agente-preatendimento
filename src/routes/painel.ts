@@ -317,7 +317,23 @@ function abrirCrm(inst){
     '<p class="muted">Cria o login de '+esc(t.nome_escritorio||'')+' no CRM. Se já existir, gera uma senha nova (serve como "esqueci a senha").</p>'+
     '<label>E-mail de acesso do advogado</label><input id="c_email" placeholder="advogado@escritorio.com"/>'+
     '<div class="erroMsg" id="c_erro"></div>'+
-    '<button class="btn" style="width:100%;margin-top:12px" id="c_btn" onclick="criarCrm(\\''+inst+'\\')">Gerar acesso</button>');
+    '<button class="btn" style="width:100%;margin-top:12px" id="c_btn" onclick="criarCrm(\\''+inst+'\\')">Gerar acesso</button>'+
+    '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="gerarLinkCrm(\\''+inst+'\\')">Ou gerar link p/ o advogado se cadastrar sozinho</button>');
+}
+async function gerarLinkCrm(inst){
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
+  try{
+    const d=await api('/admin/tenants/'+inst+'/convite');
+    CRMTXT='Seu CRM está pronto! 🎉\\n\\nCrie seu acesso neste link (válido por 7 dias):\\n'+d.link+
+      '\\n\\nVocê escolhe seu e-mail e senha e já entra direto. Lá você acompanha os leads qualificados pela Júria, o funil de vendas, a agenda e os resultados do escritório.';
+    abrirModal(
+      '<button class="fechar" onclick="fecharModal()">×</button>'+
+      '<h3>Link de cadastro</h3>'+
+      '<p class="muted">'+esc(t.nome_escritorio||'')+' — o advogado escolhe o próprio e-mail e senha. Link válido por 7 dias; pode ser reaberto para redefinir a senha.</p>'+
+      '<label>Link</label><input readonly value="'+esc(d.link)+'"/>'+
+      '<button class="btn" style="width:100%;margin-top:14px" onclick="copiarCrm(this)">Copiar mensagem pronta p/ enviar</button>'+
+      '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="fecharModal()">Fechar</button>');
+  }catch(e){alert('Erro: '+e.message)}
 }
 let CRMTXT='';
 async function criarCrm(inst){

@@ -262,6 +262,39 @@ function fazerLogin(){
     .catch(function(e){document.getElementById('lErro').textContent=e.message});
 }
 function sair(){localStorage.removeItem(TK);document.getElementById('telaApp').classList.add('hidden');document.getElementById('telaLogin').classList.remove('hidden')}
+// ---------- cadastro por convite ----------
+var CONVITE=new URLSearchParams(location.search).get('convite');
+function telaCadastro(){
+  var box=document.querySelector('#telaLogin .box');
+  box.innerHTML='<div class="logoH">H</div>'+
+    '<b>HENRIQUECER</b><span class="sub">CRM</span>'+
+    '<p class="tagline">Crie seu acesso ao CRM do seu escritório</p>'+
+    '<label>Seu e-mail</label><input id="rEmail" type="text" placeholder="advogado@seuescritorio.com"/>'+
+    '<label>Crie uma senha (mínimo 6 caracteres)</label><input id="rSenha" type="password" placeholder="••••••••"/>'+
+    '<label>Repita a senha</label><input id="rSenha2" type="password" placeholder="••••••••"/>'+
+    '<div class="erroMsg" id="rErro"></div>'+
+    '<button class="btn" style="width:100%;margin-top:12px" id="rBtn" onclick="fazerCadastro()">Criar acesso e entrar</button>'+
+    '<div class="lgfoot"><span class="online"><i></i>Sistema online</span><br/>Ambiente seguro · HENRIQUECER · v'+VERSAO+'</div>';
+}
+function fazerCadastro(){
+  var email=document.getElementById('rEmail').value.trim();
+  var s1=document.getElementById('rSenha').value, s2=document.getElementById('rSenha2').value;
+  var erro=document.getElementById('rErro');
+  if(!email||!s1){erro.textContent='Preencha e-mail e senha.';return}
+  if(s1.length<6){erro.textContent='A senha precisa ter pelo menos 6 caracteres.';return}
+  if(s1!==s2){erro.textContent='As senhas não conferem.';return}
+  var b=document.getElementById('rBtn');b.disabled=true;b.textContent='Criando…';
+  fetch('/api/crm/registrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({convite:CONVITE,email:email,senha:s1})})
+    .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'erro');return d})})
+    .then(function(d){
+      localStorage.setItem(TK,d.token);
+      localStorage.setItem('crm_nome',d.nome||'');
+      localStorage.setItem('crm_esc',d.escritorio||'');
+      history.replaceState(null,'','/crm');
+      iniciar();
+    })
+    .catch(function(e){erro.textContent=e.message;b.disabled=false;b.textContent='Criar acesso e entrar'});
+}
 function iniciar(){
   document.getElementById('telaLogin').classList.add('hidden');
   document.getElementById('telaApp').classList.remove('hidden');
@@ -656,7 +689,8 @@ function excluirEvento(id){
 
 // boot
 document.getElementById('lSenha').addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin()});
-if(tk()){api('/api/crm/leads').then(iniciar).catch(function(){sair()})}
+if(CONVITE){telaCadastro()}
+else if(tk()){api('/api/crm/leads').then(iniciar).catch(function(){sair()})}
 </script>
 </body>
 </html>`;

@@ -183,6 +183,7 @@ async function carregarAdv(){
         <div class="acoes">
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
+          <button class="btn ghost sm" onclick="abrirCrm('\${t.evolution_instance}')">Acesso CRM</button>
           <button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
           <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>
         </div>
@@ -306,6 +307,44 @@ async function salvarEdicao(inst){
     document.getElementById('e_erro').textContent='Erro: '+e.message;
     b.disabled=false;b.textContent='Salvar alterações';
   }
+}
+
+function abrirCrm(inst){
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
+  abrirModal(
+    '<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Acesso ao CRM</h3>'+
+    '<p class="muted">Cria o login de '+esc(t.nome_escritorio||'')+' no CRM. Se já existir, gera uma senha nova (serve como "esqueci a senha").</p>'+
+    '<label>E-mail de acesso do advogado</label><input id="c_email" placeholder="advogado@escritorio.com"/>'+
+    '<div class="erroMsg" id="c_erro"></div>'+
+    '<button class="btn" style="width:100%;margin-top:12px" id="c_btn" onclick="criarCrm(\\''+inst+'\\')">Gerar acesso</button>');
+}
+let CRMTXT='';
+async function criarCrm(inst){
+  const email=document.getElementById('c_email').value.trim();
+  if(!email){document.getElementById('c_erro').textContent='Informe o e-mail.';return}
+  const b=document.getElementById('c_btn');b.disabled=true;b.textContent='Gerando…';
+  try{
+    const d=await api('/admin/tenants/'+inst+'/crm-user',{method:'POST',body:JSON.stringify({email:email})});
+    const url='https://'+location.host+'/crm';
+    CRMTXT='Seu CRM já está no ar! 🎉\\n\\nAcesse: '+url+'\\nE-mail: '+d.crm.email+'\\nSenha: '+d.crm.senha+
+      '\\n\\nLá você acompanha os leads que a Júria qualifica, o funil de vendas, a agenda de reuniões e os resultados do escritório.';
+    abrirModal(
+      '<button class="fechar" onclick="fecharModal()">×</button>'+
+      '<h3>Acesso criado!</h3>'+
+      '<div class="aviso">Anote a senha agora — por segurança ela não fica salva em lugar nenhum. Se perder, é só gerar de novo (cria outra senha).</div>'+
+      '<label>Endereço</label><input readonly value="'+url+'"/>'+
+      '<label>E-mail</label><input readonly value="'+esc(d.crm.email)+'"/>'+
+      '<label>Senha</label><input readonly value="'+esc(d.crm.senha)+'"/>'+
+      '<button class="btn" style="width:100%;margin-top:14px" onclick="copiarCrm(this)">Copiar mensagem pronta p/ enviar ao advogado</button>'+
+      '<button class="btn ghost" style="width:100%;margin-top:8px" onclick="fecharModal()">Fechar</button>');
+  }catch(e){
+    document.getElementById('c_erro').textContent='Erro: '+e.message;
+    b.disabled=false;b.textContent='Gerar acesso';
+  }
+}
+function copiarCrm(btn){
+  navigator.clipboard.writeText(CRMTXT).then(function(){btn.textContent='Copiado! ✓'});
 }
 
 async function desconectar(inst){

@@ -261,17 +261,17 @@ async function salvarNovo(){
   }catch(e){document.getElementById('f_erro').textContent='Erro: '+e.message;b.disabled=false;b.textContent='Cadastrar e gerar QR'}
 }
 async function verQR(inst){
-  abrirModal('<div class=”qrbox” style=”color:var(--muted)”>Gerando QR…</div>',true);
+  abrirModal('<div class="qrbox" style="color:var(--muted)">Gerando QR…</div>',true);
   try{const d=await api('/admin/tenants/'+inst+'/qrcode');mostrarQR(d.qrcode,'Escaneie no WhatsApp do escritório:');}
-  catch(e){abrirModal('<button class=”fechar” onclick=”fecharModal()”>×</button><p>Erro: '+esc(e.message)+'</p>',true)}
+  catch(e){abrirModal('<button class="fechar" onclick="fecharModal()">×</button><p>Erro: '+esc(e.message)+'</p>',true)}
 }
 function mostrarQR(qr,titulo){
   const img=qr&&(qr.base64||(qr.qrcode&&qr.qrcode.base64));
-  const body=\`<button class=”fechar” onclick=”fecharModal()”>×</button>
-    <h3>Conectar WhatsApp</h3><p class=”muted”>\${esc(titulo)}</p>
-    \${img?'<div class=”qrbox”><img src=”'+img+'”/></div>':'<div class=”aviso”>QR não disponível. Tente “Conectar / QR” novamente em alguns segundos.</div>'}
-    <div class=”aviso”>No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
-    <button class=”btn ghost” style=”width:100%” onclick=”fecharModal()”>Fechar</button>\`;
+  const body=\`<button class="fechar" onclick="fecharModal()">×</button>
+    <h3>Conectar WhatsApp</h3><p class="muted">\${esc(titulo)}</p>
+    \${img?'<div class="qrbox"><img src="'+img+'"/></div>':'<div class="aviso">QR não disponível. Tente “Conectar / QR” novamente em alguns segundos.</div>'}
+    <div class="aviso">No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
+    <button class="btn ghost" style="width:100%" onclick="fecharModal()">Fechar</button>\`;
   abrirModal(body,true);
 }
 

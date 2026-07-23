@@ -34,7 +34,10 @@ export async function handleLeadMessage(
     const janelaExpirou =
       conversa.pausado_ate != null && new Date(conversa.pausado_ate).getTime() < Date.now();
     if (!janelaExpirou) {
-      logger.info({ conversa: conversa.id }, 'Conversa pausada (advogado assumiu) — IA não responde');
+      logger.info(
+        { conversa: conversa.id, instance: tenant.evolution_instance, contato },
+        'Conversa pausada (advogado assumiu) — IA não responde',
+      );
       await addMessage(conversa.id, 'user', texto);
       await touchLeadActivity(conversa.id);
       return;
@@ -60,6 +63,10 @@ export async function handleLeadMessage(
   // Responde ao lead pelo WhatsApp
   await sendText(tenant.evolution_instance, contato, reply);
   await addMessage(conversa.id, 'assistant', reply);
+  logger.info(
+    { instance: tenant.evolution_instance, contato, conversa: conversa.id },
+    'Resposta enviada ao lead',
+  );
 
   // Atualiza a ficha estruturada, se houver algo novo
   if (Object.keys(lead).length > 0) {

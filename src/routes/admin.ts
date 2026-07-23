@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads, desativarTenant } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, desativarTenant, updateTenant } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 
@@ -148,6 +148,24 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { instance } = req.params as { instance: string };
     const state = await connectionState(instance);
     return reply.send(state);
+  });
+
+  // Editar dados cadastrais de um escritório (sem mexer na conexão do WhatsApp).
+  app.patch('/admin/tenants/:instance', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const b = (req.body ?? {}) as Partial<CriarTenantBody>;
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    const patch: Record<string, unknown> = {};
+    if (b.nome_escritorio?.trim()) patch.nome_escritorio = b.nome_escritorio.trim();
+    if (b.nome_advogado?.trim()) patch.nome_advogado = b.nome_advogado.trim();
+    if (b.areas !== undefined) patch.areas = b.areas;
+    if (b.whatsapp_advogado !== undefined) patch.whatsapp_advogado = normalizarWhatsapp(b.whatsapp_advogado);
+    if (b.instrucoes_customizadas !== undefined) patch.instrucoes_customizadas = b.instrucoes_customizadas;
+    if (Object.keys(patch).length === 0) return reply.code(400).send({ error: 'nada para atualizar' });
+    await updateTenant(tenant.id, patch);
+    logger.info({ instance, patch: Object.keys(patch) }, 'Tenant atualizado pelo painel');
+    return reply.send({ ok: true });
   });
 
   // Desconectar o WhatsApp (logout) sem excluir o escritório.

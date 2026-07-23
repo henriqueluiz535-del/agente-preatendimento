@@ -179,6 +179,7 @@ async function carregarAdv(){
         <div class="acoes">
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
+          <button class="btn ghost sm" onclick="abrirEditar('\${t.evolution_instance}')">Editar</button>
           <button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
           <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>
         </div>
@@ -269,6 +270,39 @@ function mostrarQR(qr,titulo){
     <div class="aviso">No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
     <button class="btn ghost" style="width:100%" onclick="fecharModal()">Fechar</button>\`;
   abrirModal(body);
+}
+
+function abrirEditar(inst){
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst});
+  if(!t)return;
+  abrirModal(
+    '<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Editar escritório</h3>'+
+    '<p class="muted">A conexão do WhatsApp não é afetada — só os dados do cadastro.</p>'+
+    '<label>Nome do escritório</label><input id="e_esc" value="'+esc(t.nome_escritorio||'')+'"/>'+
+    '<label>Nome do advogado(a)</label><input id="e_adv" value="'+esc(t.nome_advogado||'')+'"/>'+
+    '<label>Áreas (separadas por vírgula)</label><input id="e_areas" value="'+esc((t.areas||[]).join(', '))+'"/>'+
+    '<label>WhatsApp p/ receber leads (DDD+número)</label><input id="e_wpp" value="'+esc(t.whatsapp_advogado||'')+'"/>'+
+    '<div class="erroMsg" id="e_erro"></div>'+
+    '<button class="btn" style="width:100%;margin-top:14px" id="e_btn" onclick="salvarEdicao(\\''+inst+'\\')">Salvar alterações</button>');
+}
+async function salvarEdicao(inst){
+  const b=document.getElementById('e_btn');b.disabled=true;b.textContent='Salvando…';
+  const areas=document.getElementById('e_areas').value.split(',').map(function(s){return s.trim()}).filter(Boolean);
+  const body={
+    nome_escritorio:document.getElementById('e_esc').value.trim(),
+    nome_advogado:document.getElementById('e_adv').value.trim(),
+    areas:areas,
+    whatsapp_advogado:document.getElementById('e_wpp').value.trim(),
+  };
+  try{
+    await api('/admin/tenants/'+inst,{method:'PATCH',body:JSON.stringify(body)});
+    fecharModal();
+    carregarAdv();
+  }catch(e){
+    document.getElementById('e_erro').textContent='Erro: '+e.message;
+    b.disabled=false;b.textContent='Salvar alterações';
+  }
 }
 
 async function desconectar(inst){

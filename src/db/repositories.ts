@@ -30,6 +30,12 @@ export async function listTenants(): Promise<any[]> {
   return data ?? [];
 }
 
+/** Atualiza dados cadastrais de um tenant (nome, advogado, áreas, aviso). */
+export async function updateTenant(tenantId: string, patch: Partial<Tenant>): Promise<void> {
+  const { error } = await db.from('tenants').update(patch).eq('id', tenantId);
+  if (error) throw error;
+}
+
 /**
  * Desativa (soft delete) um tenant: a Júria para de atender, o escritório
  * some do painel, mas o histórico (leads, conversas) permanece no banco.

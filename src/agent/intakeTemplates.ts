@@ -397,6 +397,22 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
   },
 
   // ------------------------------------------------------------
+  // CASO SAMARCO (rompimento da barragem — Mariana / Rio Doce)
+  // Sinais: "Samarco", "barragem", "Mariana", "Rio Doce", "lama",
+  // "indenização da Samarco/Vale/BHP", "atingidos".
+  // ------------------------------------------------------------
+  {
+    area: 'caso Samarco — indenização (rompimento da barragem de Mariana / Rio Doce)',
+    perguntas: [
+      'Qual o seu CPF? (ESSENCIAL — sempre pergunte. EXCEÇÃO à regra de não pedir documentos: neste caso específico o advogado precisa do CPF para a análise)',
+      'Onde você residia em 2015, na época do rompimento da barragem? (cidade/distrito) (ESSENCIAL — sempre pergunte)',
+      'Em que ano você nasceu? (ESSENCIAL — sempre pergunte)',
+      'Possui comprovante de residência daquela época em seu nome ou em nome dos seus pais (genitores)?',
+      'Se não tiver comprovante de residência: você já estava estudando na época? O comprovante de matrícula escolar daquele período pode servir como prova.',
+    ],
+  },
+
+  // ------------------------------------------------------------
   // MILITAR
   // ------------------------------------------------------------
   {

@@ -406,7 +406,7 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
     perguntas: [
       'Você morava em Governador Valadares (ou outra cidade atingida) em 2015? Qual cidade? (ESSENCIAL — sempre pergunte)',
       'Qual a data de nascimento da pessoa interessada em entrar com a ação? (atenção: nem sempre é quem está escrevendo — pode ser filho, pai, mãe) (ESSENCIAL — sempre pergunte)',
-      '(CRITÉRIO DE ENQUADRAMENTO: a pessoa interessada precisa ter entre 10 e 20 anos de idade ATUALMENTE. Calcule pela data de nascimento. Fora dessa faixa, normalmente não se enquadra: explique com delicadeza, sem parecer definitivo — a palavra final é do advogado — e registre qualificado=false com o motivo em observacoes.)',
+      '(CRITÉRIO DE ENQUADRAMENTO: a pessoa interessada precisa ter entre 10 e 20 anos de idade ATUALMENTE. Calcule pela data de nascimento usando a DATA DE HOJE informada no início destas instruções, seguindo a regra de cálculo de idade. Fora dessa faixa, normalmente não se enquadra: explique com delicadeza, sem parecer definitivo — a palavra final é do advogado — e registre qualificado=false com o motivo em observacoes.)',
       'Você ou alguém da sua família já receberam alguma indenização anteriormente por esse caso? (ESSENCIAL — sempre pergunte)',
       'Qual o número do CPF do interessado(a)? Explique de forma simples: é para confirmar se é possível dar entrada com a ação. (ESSENCIAL — sempre pergunte. EXCEÇÃO à regra de não pedir documentos: neste caso específico o advogado precisa do CPF para a análise)',
       'Possui comprovante de residência daquela época em seu nome ou em nome dos seus pais (genitores)?',

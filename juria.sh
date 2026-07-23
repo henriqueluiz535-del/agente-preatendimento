@@ -29,14 +29,19 @@ definir_env() {
 aplicar_e_conferir() {
   echo "🔄 Aplicando e reiniciando a Júria..."
   docker compose up -d juria >/dev/null 2>&1
-  echo "⏳ Aguardando 10 segundos..."
-  sleep 10
-  if docker compose logs --tail 20 juria 2>/dev/null | grep -q "no ar na porta"; then
-    echo "✅ Júria no ar! Tudo certo."
-  else
-    echo "⚠️  A Júria pode não ter subido. Últimas linhas do log:"
-    docker compose logs --tail 15 juria
-  fi
+  echo "⏳ Aguardando a Júria subir..."
+  # Verifica o endpoint de saúde de verdade (até ~30s), em vez de olhar o log.
+  local tentativa=1
+  while [ "$tentativa" -le 10 ]; do
+    if curl -sf -m 3 http://127.0.0.1:8080/health 2>/dev/null | grep -q '"ok"'; then
+      echo "✅ Júria no ar! Tudo certo."
+      return 0
+    fi
+    sleep 3
+    tentativa=$((tentativa + 1))
+  done
+  echo "⚠️  A Júria não respondeu ao teste de saúde após 30s. Últimas linhas do log:"
+  docker compose logs --tail 15 juria
 }
 
 case "${1:-ajuda}" in

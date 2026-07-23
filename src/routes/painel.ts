@@ -48,7 +48,9 @@ const HTML = /* html */ `<!doctype html>
   .btn.sm{padding:7px 12px;font-size:13px}
   /* Cards */
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-  .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:18px;position:relative}
+  .editIco{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);cursor:pointer;padding:5px;border-radius:7px;line-height:0}
+  .editIco:hover{color:var(--dourado);background:rgba(232,184,75,.12)}
   .card h3{margin:0 0 2px;font-size:18px;font-weight:800}
   .card .adv{color:var(--muted);font-size:13px;margin-bottom:10px}
   .card .adv b{color:var(--dourado)}
@@ -171,6 +173,7 @@ async function carregarAdv(){
     if(!tenants.length){el.innerHTML='<div class="vazio">Nenhum advogado cadastrado ainda. Clique em “+ Novo advogado”.</div>';return}
     el.innerHTML=tenants.map(t=>\`
       <div class="card">
+        <button class="editIco" title="Editar dados do escritório" onclick="abrirEditar('\${t.evolution_instance}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
         <h3>\${esc(t.nome_escritorio)}</h3>
         <div class="adv">\${esc(t.nome_advogado)} · assistente <b>\${esc(t.nome_assistente||'Júria')}</b></div>
         <div class="meta">Áreas: \${(t.areas&&t.areas.length)?esc(t.areas.join(', ')):'todas'}</div>
@@ -179,7 +182,6 @@ async function carregarAdv(){
         <div class="acoes">
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
-          <button class="btn ghost sm" onclick="abrirEditar('\${t.evolution_instance}')">Editar</button>
           <button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
           <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>
         </div>

@@ -10,6 +10,7 @@
 #   bash juria.sh chave-claude  -> troca a chave da Anthropic (pergunta e valida)
 #   bash juria.sh chave-groq    -> troca a chave do Groq (áudio)
 #   bash juria.sh modelo        -> alterna o cérebro da Júria (haiku/sonnet)
+#   bash juria.sh autodeploy    -> ativa a atualização automática (a cada 5 min)
 # ============================================================
 set -u
 cd "$(dirname "$0")"
@@ -100,7 +101,18 @@ case "${1:-ajuda}" in
     esac
     aplicar_e_conferir
     ;;
+  autodeploy)
+    if ! command -v crontab >/dev/null 2>&1; then
+      echo "Instalando o agendador (cron)..."
+      apt-get install -y cron >/dev/null 2>&1 || { echo "❌ Não consegui instalar o cron. Rode: apt install cron"; exit 1; }
+    fi
+    chmod +x autodeploy.sh
+    ( crontab -l 2>/dev/null | grep -v 'autodeploy.sh' ; echo "*/5 * * * * bash $PWD/autodeploy.sh" ) | crontab -
+    echo "✅ Auto-deploy ativado! O servidor verifica novidades a cada 5 minutos"
+    echo "   e aplica sozinho as versões marcadas como prontas."
+    echo "   Acompanhe em: $PWD/autodeploy.log"
+    ;;
   ajuda|*)
-    sed -n '2,13p' "$0"
+    sed -n '2,14p' "$0"
     ;;
 esac

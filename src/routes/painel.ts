@@ -74,6 +74,7 @@ const HTML = /* html */ `<!doctype html>
   label{display:block;font-size:13px;font-weight:700;margin:12px 0 5px;color:#cfcabd}
   /* Modal */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+  .overlay.priv{background:#0a0a0a}
   .modal{background:var(--card);border:1px solid var(--linha);border-radius:16px;max-width:460px;width:100%;padding:24px;max-height:92vh;overflow:auto}
   .modal h3{margin:0 0 4px;font-size:20px;font-weight:800}
   .modal .fechar{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
@@ -229,7 +230,7 @@ async function carregarLeads(){
 function verLeads(tid){document.getElementById('filtroLead').value=tid;mostrar('leads')}
 
 function fecharModal(){document.getElementById('modal').innerHTML=''}
-function abrirModal(html){document.getElementById('modal').innerHTML='<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">'+html+'</div></div>'}
+function abrirModal(html,privado){document.getElementById('modal').innerHTML='<div class="overlay'+(privado?' priv':'')+'" onclick="if(event.target===this)fecharModal()"><div class="modal">'+html+'</div></div>'}
 
 function abrirNovo(){
   abrirModal(\`
@@ -260,18 +261,18 @@ async function salvarNovo(){
   }catch(e){document.getElementById('f_erro').textContent='Erro: '+e.message;b.disabled=false;b.textContent='Cadastrar e gerar QR'}
 }
 async function verQR(inst){
-  abrirModal('<div class="qrbox" style="color:var(--muted)">Gerando QR…</div>');
+  abrirModal('<div class=”qrbox” style=”color:var(--muted)”>Gerando QR…</div>',true);
   try{const d=await api('/admin/tenants/'+inst+'/qrcode');mostrarQR(d.qrcode,'Escaneie no WhatsApp do escritório:');}
-  catch(e){abrirModal('<button class="fechar" onclick="fecharModal()">×</button><p>Erro: '+esc(e.message)+'</p>')}
+  catch(e){abrirModal('<button class=”fechar” onclick=”fecharModal()”>×</button><p>Erro: '+esc(e.message)+'</p>',true)}
 }
 function mostrarQR(qr,titulo){
   const img=qr&&(qr.base64||(qr.qrcode&&qr.qrcode.base64));
-  const body=\`<button class="fechar" onclick="fecharModal()">×</button>
-    <h3>Conectar WhatsApp</h3><p class="muted">\${esc(titulo)}</p>
-    \${img?'<div class="qrbox"><img src="'+img+'"/></div>':'<div class="aviso">QR não disponível. Tente “Conectar / QR” novamente em alguns segundos.</div>'}
-    <div class="aviso">No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
-    <button class="btn ghost" style="width:100%" onclick="fecharModal()">Fechar</button>\`;
-  abrirModal(body);
+  const body=\`<button class=”fechar” onclick=”fecharModal()”>×</button>
+    <h3>Conectar WhatsApp</h3><p class=”muted”>\${esc(titulo)}</p>
+    \${img?'<div class=”qrbox”><img src=”'+img+'”/></div>':'<div class=”aviso”>QR não disponível. Tente “Conectar / QR” novamente em alguns segundos.</div>'}
+    <div class=”aviso”>No celular do escritório: WhatsApp → Aparelhos conectados → Conectar aparelho → aponte a câmera.</div>
+    <button class=”btn ghost” style=”width:100%” onclick=”fecharModal()”>Fechar</button>\`;
+  abrirModal(body,true);
 }
 
 function abrirEditar(inst){

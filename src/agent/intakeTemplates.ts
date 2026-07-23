@@ -404,11 +404,12 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
   {
     area: 'caso Samarco — indenização (rompimento da barragem de Mariana / Rio Doce)',
     perguntas: [
-      'Qual o seu CPF? (ESSENCIAL — sempre pergunte. EXCEÇÃO à regra de não pedir documentos: neste caso específico o advogado precisa do CPF para a análise)',
-      'Onde você residia em 2015, na época do rompimento da barragem? (cidade/distrito) (ESSENCIAL — sempre pergunte)',
-      'Em que ano você nasceu? (ESSENCIAL — sempre pergunte)',
+      'Você morava em Governador Valadares (ou outra cidade atingida) em 2015? Qual cidade? (ESSENCIAL — sempre pergunte)',
+      'Qual a data de nascimento da pessoa interessada em entrar com a ação? (atenção: nem sempre é quem está escrevendo — pode ser filho, pai, mãe) (ESSENCIAL — sempre pergunte)',
+      'Você ou alguém da sua família já receberam alguma indenização anteriormente por esse caso? (ESSENCIAL — sempre pergunte)',
+      'Qual o número do CPF do interessado(a)? Explique de forma simples: é para confirmar se é possível dar entrada com a ação. (ESSENCIAL — sempre pergunte. EXCEÇÃO à regra de não pedir documentos: neste caso específico o advogado precisa do CPF para a análise)',
       'Possui comprovante de residência daquela época em seu nome ou em nome dos seus pais (genitores)?',
-      'Se não tiver comprovante de residência: você já estava estudando na época? O comprovante de matrícula escolar daquele período pode servir como prova.',
+      'Se não tiver comprovante de residência: a pessoa já estava estudando na época? O comprovante de matrícula escolar daquele período pode servir como prova.',
     ],
   },
 

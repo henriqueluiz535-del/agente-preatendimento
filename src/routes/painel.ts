@@ -287,6 +287,11 @@ function abrirEditar(inst){
     '<label>Nome do advogado(a)</label><input id="e_adv" value="'+esc(t.nome_advogado||'')+'"/>'+
     '<label>Áreas (separadas por vírgula)</label><input id="e_areas" value="'+esc((t.areas||[]).join(', '))+'"/>'+
     '<label>WhatsApp p/ receber leads (DDD+número)</label><input id="e_wpp" value="'+esc(t.whatsapp_advogado||'')+'"/>'+
+    '<label>Quem a Júria atende</label><select id="e_modo">'+
+      '<option value="todos"'+((t.modo_atendimento||'todos')==='todos'?' selected':'')+'>Todos os contatos novos (padrão)</option>'+
+      '<option value="so_anuncio"'+(t.modo_atendimento==='so_anuncio'?' selected':'')+'>Só quem vem de anúncio (WhatsApp misto com clientes)</option>'+
+    '</select>'+
+    '<label>Frases dos anúncios (separadas por vírgula — detecção reserva do modo "só anúncio")</label><input id="e_frases" placeholder="vi o anúncio, indenização da samarco" value="'+esc(t.frases_anuncio||'')+'"/>'+
     '<div class="erroMsg" id="e_erro"></div>'+
     '<button class="btn" style="width:100%;margin-top:14px" id="e_btn" onclick="salvarEdicao(\\''+inst+'\\')">Salvar alterações</button>');
 }
@@ -298,6 +303,8 @@ async function salvarEdicao(inst){
     nome_advogado:document.getElementById('e_adv').value.trim(),
     areas:areas,
     whatsapp_advogado:document.getElementById('e_wpp').value.trim(),
+    modo_atendimento:document.getElementById('e_modo').value,
+    frases_anuncio:document.getElementById('e_frases').value.trim(),
   };
   try{
     await api('/admin/tenants/'+inst,{method:'PATCH',body:JSON.stringify(body)});

@@ -23,7 +23,7 @@ export async function createTenant(input: Partial<Tenant> & { evolution_instance
 export async function listTenants(): Promise<any[]> {
   const { data, error } = await db
     .from('tenants')
-    .select('id, nome_escritorio, nome_advogado, nome_assistente, areas, whatsapp_advogado, evolution_instance, ativo, created_at')
+    .select('*')
     .eq('ativo', true)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -58,6 +58,18 @@ export async function listLeads(tenantId?: string): Promise<any[]> {
 }
 
 // ---------- Conversations ----------
+
+/** Busca a conversa de um contato SEM criar (null se nunca conversou). */
+export async function getConversation(tenantId: string, contato: string): Promise<Conversation | null> {
+  const { data, error } = await db
+    .from('conversations')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .eq('contato', contato)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Conversation | null;
+}
 
 export async function getOrCreateConversation(
   tenantId: string,

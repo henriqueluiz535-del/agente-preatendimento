@@ -18,6 +18,8 @@ interface CriarTenantBody {
   horario_atendimento?: string;
   whatsapp_advogado?: string;
   evolution_instance?: string;
+  modo_atendimento?: string;
+  frases_anuncio?: string;
 }
 
 /**
@@ -173,6 +175,13 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     if (b.areas !== undefined) patch.areas = b.areas;
     if (b.whatsapp_advogado !== undefined) patch.whatsapp_advogado = normalizarWhatsapp(b.whatsapp_advogado);
     if (b.instrucoes_customizadas !== undefined) patch.instrucoes_customizadas = b.instrucoes_customizadas;
+    if (b.modo_atendimento !== undefined) {
+      if (!['todos', 'so_anuncio'].includes(b.modo_atendimento)) {
+        return reply.code(400).send({ error: 'modo_atendimento inválido' });
+      }
+      patch.modo_atendimento = b.modo_atendimento;
+    }
+    if (b.frases_anuncio !== undefined) patch.frases_anuncio = b.frases_anuncio;
     if (Object.keys(patch).length === 0) return reply.code(400).send({ error: 'nada para atualizar' });
     await updateTenant(tenant.id, patch);
     logger.info({ instance, patch: Object.keys(patch) }, 'Tenant atualizado pelo painel');

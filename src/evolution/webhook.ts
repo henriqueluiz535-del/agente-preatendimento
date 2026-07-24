@@ -8,6 +8,7 @@ export interface IncomingMessage {
   isGroup: boolean;
   isAudio: boolean;
   messageId: string | null;
+  veioDeAnuncio: boolean; // mensagem originada de clique em anúncio (Meta CTWA)
 }
 
 export function parseIncoming(payload: any): IncomingMessage | null {
@@ -29,6 +30,13 @@ export function parseIncoming(payload: any): IncomingMessage | null {
 
   const isAudio = Boolean(msg.audioMessage ?? msg.pttMessage);
 
+  // Mensagens vindas de clique em anúncio do Meta (click-to-WhatsApp) carregam
+  // metadados de atribuição (externalAdReply / ctwa_clid). Detectamos pela
+  // presença desses marcadores em qualquer ponto da mensagem.
+  const veioDeAnuncio = /externalAdReply|ctwa_?clid|sourceUrl|source_url|adAttribution/i.test(
+    JSON.stringify(msg),
+  );
+
   return {
     fromMe: Boolean(data.key.fromMe),
     contato: remoteJid.replace(/@s\.whatsapp\.net$/, '').replace(/@g\.us$/, ''),
@@ -37,5 +45,6 @@ export function parseIncoming(payload: any): IncomingMessage | null {
     isGroup,
     isAudio,
     messageId: data.key.id ?? null,
+    veioDeAnuncio,
   };
 }

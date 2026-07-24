@@ -4,6 +4,8 @@ import {
   getTenantByInstance,
   pauseConversationByContact,
   resumeConversationByContact,
+  getConversation,
+  getOrCreateConversation,
 } from '../db/repositories.js';
 import { parseIncoming } from '../evolution/webhook.js';
 import { getBase64FromMediaMessage, sendText, foiEnviadoPeloBot } from '../evolution/client.js';
@@ -51,6 +53,14 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
           logger.info({ instance, contato: msg.contato }, 'Comando #pausar — Júria pausada sem prazo');
           return;
         }
+        if (comando === '#atender') {
+          // Ativa a Júria para este contato (útil no modo "só anúncios":
+          // libera um contato que não veio de anúncio para ser atendido).
+          await getOrCreateConversation(tenant.id, msg.contato, null);
+          await resumeConversationByContact(tenant.id, msg.contato);
+          logger.info({ instance, contato: msg.contato }, 'Comando #atender — Júria ativada para este contato');
+          return;
+        }
 
         const ate = new Date(Date.now() + TAKEOVER_HORAS * 3600_000).toISOString();
         const pausada = await pauseConversationByContact(tenant.id, msg.contato, ate);
@@ -69,6 +79,29 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
       if (!tenant) {
         logger.warn({ instance }, 'Webhook recebido para instância sem tenant ativo');
         return;
+      }
+
+      // Modo "só anúncios": em WhatsApp misto (clientes do dia a dia + leads),
+      // a Júria só inicia atendimento de contato NOVO que venha de anúncio
+      // (metadados do Meta) ou cuja 1ª mensagem contenha frase do anúncio.
+      // Conversas já iniciadas seguem normalmente; #atender libera exceções.
+      if ((tenant.modo_atendimento ?? 'todos') === 'so_anuncio') {
+        const conversaExistente = await getConversation(tenant.id, msg.contato);
+        if (!conversaExistente) {
+          const frases = (tenant.frases_anuncio ?? '')
+            .split(',')
+            .map((f) => f.trim().toLowerCase())
+            .filter(Boolean);
+          const bateFrase =
+            !!msg.texto && frases.some((f) => (msg.texto as string).toLowerCase().includes(f));
+          if (!msg.veioDeAnuncio && !bateFrase) {
+            logger.info(
+              { instance, contato: msg.contato },
+              'Modo só-anúncios: contato sem origem de anúncio — Júria não responde',
+            );
+            return;
+          }
+        }
       }
 
       let texto = msg.texto;

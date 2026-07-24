@@ -11,6 +11,8 @@ export interface Tenant {
   horario_atendimento: string | null;
   whatsapp_advogado: string | null;
   evolution_instance: string;
+  modo_atendimento?: string | null; // 'todos' (padrão) | 'so_anuncio'
+  frases_anuncio?: string | null; // frases dos anúncios, separadas por vírgula
 }
 
 export interface Conversation {

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads, desativarTenant, updateTenant } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
@@ -123,6 +123,13 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { tenant_id } = req.query as { tenant_id?: string };
     const leads = await listLeads(tenant_id);
     return reply.send({ leads });
+  });
+
+  // Conversa completa de um lead (ficha aberta no painel)
+  app.get('/admin/leads/:id/mensagens', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const mensagens = await listLeadMessages(id);
+    return reply.send({ mensagens });
   });
 
   // Criar/redefinir acesso ao CRM de um tenant já existente

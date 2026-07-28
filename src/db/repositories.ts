@@ -45,6 +45,25 @@ export async function desativarTenant(tenantId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Conversa completa de um lead (para o painel da agência). */
+export async function listLeadMessages(leadId: string): Promise<any[]> {
+  const { data: lead, error: e1 } = await db
+    .from('leads')
+    .select('conversation_id')
+    .eq('id', leadId)
+    .maybeSingle();
+  if (e1) throw e1;
+  if (!lead?.conversation_id) return [];
+  const { data, error } = await db
+    .from('messages')
+    .select('role, content, created_at')
+    .eq('conversation_id', lead.conversation_id)
+    .order('created_at', { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function listLeads(tenantId?: string): Promise<any[]> {
   let query = db
     .from('leads')

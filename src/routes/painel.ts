@@ -65,6 +65,15 @@ const HTML = /* html */ `<!doctype html>
   .tabela th,.tabela td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--linha);font-size:13px;vertical-align:top}
   .tabela th{background:#141414;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
   .tabela tr:last-child td{border-bottom:none}
+  .tabela tbody tr{cursor:pointer}
+  .tabela tbody tr:hover{background:#1f1f1f}
+  .chatbox{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow:auto;background:var(--card-2);border:1px solid var(--linha);border-radius:10px;padding:10px;margin-top:10px}
+  .balaoP{max-width:82%;padding:7px 11px;border-radius:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.45}
+  .balaoP.lead{background:#242424;align-self:flex-start;border-bottom-left-radius:3px}
+  .balaoP.ia{background:rgba(232,184,75,.15);border:1px solid rgba(232,184,75,.25);align-self:flex-end;border-bottom-right-radius:3px}
+  .balaoP small{display:block;font-size:9px;color:var(--muted);margin-top:2px}
+  .fichaL{font-size:13px;line-height:1.8;margin-top:6px}
+  .fichaL b{color:var(--dourado)}
   .urg{font-weight:800;font-size:11px;padding:2px 8px;border-radius:6px;text-transform:uppercase}
   .urg.alta{background:rgba(255,107,94,.16);color:#ff8a80} .urg.media{background:rgba(232,184,75,.16);color:var(--dourado)} .urg.baixa{background:#242424;color:var(--muted)}
   .pill{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;background:rgba(232,184,75,.14);color:var(--dourado)}
@@ -211,13 +220,14 @@ async function carregarLeads(){
   el.innerHTML='<div class="vazio">Carregando…</div>';
   try{
     const {leads}=await api('/admin/leads'+(tid?('?tenant_id='+tid):''));
+    LEADS_ADMIN=leads;
     if(!leads.length){el.innerHTML='<div class="vazio">Nenhum lead ainda. Assim que a Júria atender, eles aparecem aqui.</div>';return}
     el.innerHTML=\`<table class="tabela"><thead><tr>
       <th>Chegada</th><th>Nome</th><th>Área</th><th>Urgência</th><th>Resumo</th><th>Contato</th><th>Status</th></tr></thead><tbody>\`+
       leads.map(l=>{
         const c=l.conversations||{}; const u=(l.urgencia||'').toLowerCase();
         const chegada=l.created_at?new Date(l.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-        return \`<tr>
+        return \`<tr onclick="verLead('\${l.id}')">
           <td style="white-space:nowrap">\${chegada}</td>
           <td>\${esc(l.nome||'—')}</td>
           <td>\${esc(l.area_juridica||'—')}</td>
@@ -229,6 +239,40 @@ async function carregarLeads(){
   }catch(e){el.innerHTML='<div class="vazio">Erro ao carregar: '+esc(e.message)+'</div>'}
 }
 function verLeads(tid){document.getElementById('filtroLead').value=tid;mostrar('leads')}
+
+let LEADS_ADMIN=[];
+async function verLead(id){
+  const l=LEADS_ADMIN.find(function(x){return x.id===id});
+  if(!l)return;
+  const c=l.conversations||{};
+  const obs=(l.dados&&l.dados.observacoes)||'';
+  const status=l.encaminhado?'encaminhado':(l.qualificado?'qualificado':'em triagem');
+  let h='<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</h3>'+
+    '<div class="muted">'+esc(c.contato||'')+' · '+status+'</div>'+
+    '<div class="fichaL">'+
+    '<b>Área:</b> '+esc(l.area_juridica||'—')+'<br/>'+
+    '<b>Urgência:</b> '+esc(l.urgencia||'—')+'<br/>'+
+    '<b>Resumo:</b> '+esc(l.resumo_caso||'— (triagem em andamento)')+
+    (obs?'<br/><b>Observações:</b> '+esc(obs):'')+
+    '</div>'+
+    '<div class="chatbox" id="chatL"><div class="muted" style="padding:8px">Carregando conversa…</div></div>';
+  abrirModal(h);
+  try{
+    const d=await api('/admin/leads/'+id+'/mensagens');
+    const box=document.getElementById('chatL');
+    if(!box)return;
+    if(!d.mensagens.length){box.innerHTML='<div class="muted" style="padding:8px">Sem conversa registrada.</div>';return}
+    box.innerHTML=d.mensagens.map(function(m){
+      const hora=m.created_at?new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      return '<div class="balaoP '+(m.role==='user'?'lead':'ia')+'">'+esc(m.content)+'<small>'+hora+(m.role==='assistant'?' · Júria':'')+'</small></div>';
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  }catch(e){
+    const box=document.getElementById('chatL');
+    if(box)box.innerHTML='<div class="muted" style="padding:8px">Erro ao carregar: '+esc(e.message)+'</div>';
+  }
+}
 
 function fecharModal(){document.getElementById('modal').innerHTML=''}
 function abrirModal(html,privado){document.getElementById('modal').innerHTML='<div class="overlay'+(privado?' priv':'')+'" onclick="if(event.target===this)fecharModal()"><div class="modal">'+html+'</div></div>'}

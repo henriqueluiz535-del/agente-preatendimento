@@ -107,10 +107,16 @@ const HTML = /* html */ `<!doctype html>
   <div class="box">
     <div class="logoH">H</div>
     <b>HENRIQUECER</b><span class="sub">Assessoria Digital</span>
-    <label style="text-align:left">Chave de acesso (admin)</label>
+    <label style="text-align:left">Chave de acesso (administrador)</label>
     <input id="chave" type="password" placeholder="Cole sua ADMIN_API_KEY" />
+    <button class="btn" style="width:100%;margin-top:12px" onclick="entrar()">Entrar com chave</button>
+    <div style="margin:16px 0 2px;color:var(--muted);font-size:12px">— ou entre com seu login de equipe —</div>
+    <label style="text-align:left">E-mail</label>
+    <input id="lem" type="text" placeholder="voce@henriquecer.com" />
+    <label style="text-align:left">Senha</label>
+    <input id="lse" type="password" placeholder="••••••••" />
     <div class="erroMsg" id="loginErro"></div>
-    <button class="btn" style="width:100%;margin-top:14px" onclick="entrar()">Entrar</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="entrarEmail()">Entrar com e-mail</button>
   </div>
 </div>
 
@@ -118,7 +124,10 @@ const HTML = /* html */ `<!doctype html>
 <div id="app" class="hidden">
   <header>
     <div class="brand"><b><i>H</i>ENRIQUECER</b><span>Assessoria Digital · Painel Júria</span></div>
-    <button class="sair" onclick="sair()">Sair</button>
+    <div style="display:flex;gap:8px">
+      <button class="sair hidden" id="btnEquipe" onclick="abrirEquipe()">Equipe</button>
+      <button class="sair" onclick="sair()">Sair</button>
+    </div>
   </header>
   <main>
     <div class="tabs">
@@ -148,10 +157,16 @@ const HTML = /* html */ `<!doctype html>
 
 <script>
 const KEY='henriquecer_admin_key';
+const TOK='henriquecer_admin_tok';
+const PAP='henriquecer_papel';
 let TENANTS=[];
 function chave(){return localStorage.getItem(KEY)||''}
+function tok(){return localStorage.getItem(TOK)||''}
+function papel(){return chave()?'dono':(localStorage.getItem(PAP)||'operador')}
 async function api(path,opts={}){
-  const r=await fetch(path,{...opts,headers:{'Content-Type':'application/json','x-admin-key':chave(),...(opts.headers||{})}});
+  const h={'Content-Type':'application/json',...(opts.headers||{})};
+  if(chave())h['x-admin-key']=chave(); else if(tok())h['x-admin-token']=tok();
+  const r=await fetch(path,{...opts,headers:h});
   if(r.status===401){sair();throw new Error('não autorizado')}
   const t=await r.text(); let d; try{d=t?JSON.parse(t):{}}catch{d=t}
   if(!r.ok)throw new Error((d&&d.error)||('erro '+r.status));
@@ -164,7 +179,20 @@ async function entrar(){
   try{ await api('/admin/tenants'); iniciar(); }
   catch(e){ document.getElementById('loginErro').textContent='Chave inválida. Tente de novo.'; localStorage.removeItem(KEY); }
 }
-function sair(){localStorage.removeItem(KEY);document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden')}
+async function entrarEmail(){
+  const email=document.getElementById('lem').value.trim();
+  const senha=document.getElementById('lse').value;
+  if(!email||!senha){document.getElementById('loginErro').textContent='Preencha e-mail e senha.';return}
+  try{
+    const r=await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,senha:senha})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'erro');
+    localStorage.setItem(TOK,d.token);
+    localStorage.setItem(PAP,d.papel||'operador');
+    iniciar();
+  }catch(e){document.getElementById('loginErro').textContent=e.message}
+}
+function sair(){localStorage.removeItem(KEY);localStorage.removeItem(TOK);localStorage.removeItem(PAP);document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden')}
 function mostrar(t){
   document.getElementById('secAdv').classList.toggle('hidden',t!=='adv');
   document.getElementById('secLeads').classList.toggle('hidden',t!=='leads');
@@ -181,6 +209,7 @@ async function carregarAdv(){
     const {tenants}=await api('/admin/tenants'); TENANTS=tenants;
     preencherFiltro();
     if(!tenants.length){el.innerHTML='<div class="vazio">Nenhum advogado cadastrado ainda. Clique em “+ Novo advogado”.</div>';return}
+    const dono=papel()==='dono';
     el.innerHTML=tenants.map(t=>\`
       <div class="card">
         <button class="editIco" title="Editar dados do escritório" onclick="abrirEditar('\${t.evolution_instance}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
@@ -193,8 +222,8 @@ async function carregarAdv(){
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
           <button class="btn ghost sm" onclick="abrirCrm('\${t.evolution_instance}')">Acesso CRM</button>
-          <button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
-          <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>
+          \${dono?\`<button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
+          <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>\`:''}
         </div>
       </div>\`).join('');
     tenants.forEach(t=>verificarStatus(t.evolution_instance));
@@ -452,9 +481,65 @@ async function confirmarExclusao(){
 function iniciar(){
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  document.getElementById('btnEquipe').classList.toggle('hidden',papel()!=='dono');
   carregarAdv();
 }
-if(chave()){ api('/admin/tenants').then(iniciar).catch(sair); }
+
+// ---- Gestão de equipe (somente dono) ----
+async function abrirEquipe(){
+  abrirModal(
+    '<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Equipe</h3>'+
+    '<p class="muted">Operadores entram com e-mail e senha: podem cadastrar escritórios, conectar QR, editar e ver leads — não podem excluir nem desconectar.</p>'+
+    '<div id="eqLista" class="muted" style="margin:8px 0">Carregando…</div>'+
+    '<label>Nome</label><input id="eq_nome" placeholder="Ex: Messias"/>'+
+    '<label>E-mail</label><input id="eq_email" placeholder="operador@henriquecer.com"/>'+
+    '<div class="erroMsg" id="eq_erro"></div>'+
+    '<button class="btn" style="width:100%;margin-top:10px" id="eq_btn" onclick="criarEq()">Criar acesso / redefinir senha</button>');
+  carregarEq();
+}
+async function carregarEq(){
+  try{
+    const d=await api('/admin/equipe');
+    const el=document.getElementById('eqLista'); if(!el)return;
+    if(!d.equipe.length){el.innerHTML='Nenhum operador cadastrado ainda.';return}
+    el.innerHTML=d.equipe.map(function(u){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--linha);font-size:13px">'+
+        '<div style="flex:1"><b style="color:var(--texto)">'+esc(u.nome||u.email)+'</b><div>'+esc(u.email)+' · '+esc(u.papel)+'</div></div>'+
+        '<button class="btn danger sm" onclick="removerEq(\\''+u.id+'\\')">Remover</button></div>';
+    }).join('');
+  }catch(e){
+    const el=document.getElementById('eqLista');
+    if(el)el.innerHTML='Erro: '+esc(e.message);
+  }
+}
+async function criarEq(){
+  const nome=document.getElementById('eq_nome').value.trim();
+  const email=document.getElementById('eq_email').value.trim();
+  if(!email){document.getElementById('eq_erro').textContent='Informe o e-mail.';return}
+  const b=document.getElementById('eq_btn');b.disabled=true;b.textContent='Criando…';
+  try{
+    const d=await api('/admin/equipe',{method:'POST',body:JSON.stringify({email:email,nome:nome})});
+    abrirModal(
+      '<button class="fechar" onclick="fecharModal()">×</button>'+
+      '<h3>Acesso criado!</h3>'+
+      '<div class="aviso">Anote a senha — ela não fica salva. Pra trocar, é só criar de novo com o mesmo e-mail.</div>'+
+      '<label>Endereço</label><input readonly value="https://'+location.host+'"/>'+
+      '<label>E-mail</label><input readonly value="'+esc(d.email)+'"/>'+
+      '<label>Senha</label><input readonly value="'+esc(d.senha)+'"/>'+
+      '<button class="btn ghost" style="width:100%;margin-top:12px" onclick="abrirEquipe()">Voltar à equipe</button>');
+  }catch(e){
+    document.getElementById('eq_erro').textContent='Erro: '+e.message;
+    b.disabled=false;b.textContent='Criar acesso / redefinir senha';
+  }
+}
+async function removerEq(id){
+  if(!confirm('Remover este acesso? A pessoa perde a entrada no painel imediatamente.'))return;
+  try{await api('/admin/equipe/'+id,{method:'DELETE',body:'{}'});carregarEq()}
+  catch(e){alert('Erro: '+e.message)}
+}
+
+if(chave()||tok()){ api('/admin/tenants').then(iniciar).catch(sair); }
 document.getElementById('chave').addEventListener('keydown',e=>{if(e.key==='Enter')entrar()});
 </script>
 </body>

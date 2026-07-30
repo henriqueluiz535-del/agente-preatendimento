@@ -5,6 +5,7 @@ import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMess
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
+import { loginEquipe, validarTokenEquipe, listarEquipe, criarMembro, removerMembro } from '../painel/equipe.js';
 
 interface CriarTenantBody {
   nome_escritorio: string;
@@ -45,13 +46,65 @@ function slugify(s: string): string {
 }
 
 export async function adminRoutes(app: FastifyInstance): Promise<void> {
-  // Autenticação simples por API key nas rotas /admin/*
+  // Autenticação nas rotas /admin/*:
+  //  - x-admin-key = ADMIN_API_KEY  -> papel "dono" (acesso total)
+  //  - x-admin-token = login de equipe -> papel "operador" (sem excluir/
+  //    desconectar escritórios e sem gestão de equipe)
   app.addHook('preHandler', async (req, reply) => {
     if (!req.url.startsWith('/admin')) return;
+    if (req.url.startsWith('/admin/login')) return; // rota pública de login
+
     const key = req.headers['x-admin-key'];
-    if (key !== config.adminApiKey) {
-      reply.code(401).send({ error: 'não autorizado' });
+    if (key === config.adminApiKey) {
+      (req as any).papel = 'dono';
+      return;
     }
+
+    const token = req.headers['x-admin-token'];
+    if (typeof token === 'string' && token) {
+      const membro = await validarTokenEquipe(token);
+      if (membro) {
+        (req as any).papel = membro.papel;
+        if (membro.papel !== 'dono') {
+          const excluirTenant = req.method === 'DELETE' && /^\/admin\/tenants\/[^/]+$/.test(req.url);
+          const desconectar = req.method === 'POST' && req.url.endsWith('/disconnect');
+          const gerirEquipe = req.url.startsWith('/admin/equipe');
+          if (excluirTenant || desconectar || gerirEquipe) {
+            reply.code(403).send({ error: 'seu acesso não permite esta ação — fale com o administrador' });
+            return;
+          }
+        }
+        return;
+      }
+    }
+
+    reply.code(401).send({ error: 'não autorizado' });
+  });
+
+  // Login da equipe (e-mail + senha) — devolve token com validade de 30 dias
+  app.post('/admin/login', async (req, reply) => {
+    const { email, senha } = (req.body ?? {}) as { email?: string; senha?: string };
+    if (!email || !senha) return reply.code(400).send({ error: 'informe e-mail e senha' });
+    const r = await loginEquipe(email, senha);
+    if (!r) return reply.code(401).send({ error: 'e-mail ou senha inválidos' });
+    return reply.send(r);
+  });
+
+  // Gestão de equipe (somente dono — o hook bloqueia operadores)
+  app.get('/admin/equipe', async (_req, reply) => {
+    return reply.send({ equipe: await listarEquipe() });
+  });
+  app.post('/admin/equipe', async (req, reply) => {
+    const { email, nome } = (req.body ?? {}) as { email?: string; nome?: string };
+    if (!email?.trim()) return reply.code(400).send({ error: 'email é obrigatório' });
+    const senha = await criarMembro(email, nome ?? '');
+    logger.info({ email }, 'Membro da equipe criado/redefinido');
+    return reply.send({ email: email.trim().toLowerCase(), senha });
+  });
+  app.delete('/admin/equipe/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    await removerMembro(id);
+    return reply.send({ ok: true });
   });
 
   /**

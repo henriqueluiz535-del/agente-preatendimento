@@ -1,6 +1,14 @@
 # Proxy HTTPS da Júria (Caddy).
 # O domínio vem da variável DOMINIO do .env — o certificado (cadeado)
 # é emitido e renovado automaticamente via Let's Encrypt.
+{
+	# HTTP/3 (QUIC) desativado: operadoras/redes que filtram UDP 443
+	# causavam ERR_QUIC_PROTOCOL_ERROR / ERR_SSL_PROTOCOL_ERROR em
+	# alguns aparelhos. h1+h2 funcionam em qualquer rede.
+	servers {
+		protocols h1 h2
+	}
+}
 {$DOMINIO} {
 	reverse_proxy juria:8080
 }

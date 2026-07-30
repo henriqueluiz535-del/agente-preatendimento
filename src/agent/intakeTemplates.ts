@@ -418,14 +418,13 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
   // MILITAR
   // ------------------------------------------------------------
   {
-    area: 'militar — revisão de desconto CPSM (pensão militar)',
+    area: 'militar — desconto SPS/CPSM no contracheque (reserva, reformados e pensionistas)',
     perguntas: [
-      'A pessoa é da ativa, reserva, reformado ou pensionista? (ESSENCIAL — sempre pergunte)',
-      'Qual a patente/graduação?',
-      'Recebe acima do teto previdenciário?',
-      'Aparece o desconto (CPSM/pensão militar) no contracheque?',
-      'Possui contracheque recente?',
-      'Desde quando o desconto acontece?',
+      'Você é militar da reserva, reformado ou pensionista? (ESSENCIAL — sempre pergunte)',
+      'Qual é o seu Estado (UF)? (ESSENCIAL — sempre pergunte)',
+      'O desconto do SPS ainda aparece no contracheque? (ESSENCIAL — sempre pergunte)',
+      'Tem um contracheque recente em mãos?',
+      'Já consultou algum advogado sobre isso?',
     ],
   },
 ];

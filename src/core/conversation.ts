@@ -53,6 +53,19 @@ export async function handleLeadMessage(
     conversa.status = 'ativo';
   }
 
+  // Lead já encaminhado: o escritório assumiu — a Júria fica em silêncio.
+  // A mensagem é registrada (aparece no painel/CRM), mas não há resposta
+  // automática. Para reativar a Júria nesta conversa: #voltar.
+  if (conversa.status === 'encaminhado') {
+    await addMessage(conversa.id, 'user', texto);
+    await touchLeadActivity(conversa.id);
+    logger.info(
+      { conversa: conversa.id, instance: tenant.evolution_instance, contato },
+      'Mensagem de lead encaminhado — escritório assume (Júria em silêncio)',
+    );
+    return;
+  }
+
   await addMessage(conversa.id, 'user', texto);
   await touchLeadActivity(conversa.id); // zera o ciclo de follow-ups
   await ensureLead(conversa.id, tenant.id, nomeContato); // entra no funil do CRM ("novo")

@@ -179,12 +179,16 @@ export async function resumeConversationByContact(tenantId: string, contato: str
   return data.id;
 }
 
-/** Conversas candidatas a follow-up (ativas/encaminhadas, ciclo não esgotado). */
+/**
+ * Conversas candidatas a follow-up: apenas as AINDA em triagem (ativas).
+ * Leads já encaminhados são responsabilidade do escritório — a Júria não
+ * manda mais mensagens proativas depois do encaminhamento.
+ */
 export async function listFollowupCandidates(maxFollowups: number): Promise<any[]> {
   const { data, error } = await db
     .from('conversations')
     .select('*')
-    .in('status', ['ativo', 'encaminhado'])
+    .eq('status', 'ativo')
     .lt('followups_enviados', maxFollowups)
     .limit(200);
   if (error) throw error;

@@ -73,7 +73,7 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
         return;
       }
 
-      if (!msg.texto && !msg.isAudio) return; // ignora outros tipos de mídia
+      if (!msg.texto && !msg.isAudio && !msg.anexo) return; // ignora outros tipos de mídia
 
       const tenant = await getTenantByInstance(instance);
       if (!tenant) {
@@ -130,6 +130,10 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
           return;
         }
       }
+
+      // Anexo (documento/foto): entra como marcador para a IA saber que chegou,
+      // junto com a legenda, se houver.
+      if (msg.anexo) texto = texto ? `${msg.anexo} ${texto}` : msg.anexo;
 
       if (!texto) return;
       await handleLeadMessage(tenant, msg.contato, msg.nomeContato, texto);

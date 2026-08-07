@@ -9,6 +9,7 @@ export interface IncomingMessage {
   isAudio: boolean;
   messageId: string | null;
   veioDeAnuncio: boolean; // mensagem originada de clique em anúncio (Meta CTWA)
+  anexo: string | null; // marcador "[anexo recebido...]" quando o lead envia arquivo/foto
 }
 
 export function parseIncoming(payload: any): IncomingMessage | null {
@@ -30,6 +31,15 @@ export function parseIncoming(payload: any): IncomingMessage | null {
 
   const isAudio = Boolean(msg.audioMessage ?? msg.pttMessage);
 
+  // Documento/foto enviado pelo lead (ex: contracheque, contrato). Não abrimos
+  // o conteúdo (custo zero) — apenas sinalizamos à IA que um anexo chegou.
+  const docMsg = msg.documentMessage ?? msg.documentWithCaptionMessage?.message?.documentMessage;
+  const temAnexo = Boolean(docMsg || msg.imageMessage);
+  const nomeArquivo: string | null = docMsg?.fileName ?? null;
+  const anexo = temAnexo
+    ? `[anexo recebido${nomeArquivo ? `: ${nomeArquivo}` : msg.imageMessage ? ': foto' : ''}]`
+    : null;
+
   // Mensagens vindas de clique em anúncio do Meta (click-to-WhatsApp) carregam
   // metadados de atribuição (externalAdReply / ctwa_clid). Detectamos pela
   // presença desses marcadores em qualquer ponto da mensagem.
@@ -46,5 +56,6 @@ export function parseIncoming(payload: any): IncomingMessage | null {
     isAudio,
     messageId: data.key.id ?? null,
     veioDeAnuncio,
+    anexo,
   };
 }

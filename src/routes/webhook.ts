@@ -81,6 +81,10 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
         return;
       }
 
+      // Cliente "Somente CRM" não tem Júria — nunca responde (não deveria nem
+      // ter instância no Evolution; guarda de segurança).
+      if ((tenant.modo_atendimento ?? 'todos') === 'somente_crm') return;
+
       // Modo "só anúncios": em WhatsApp misto (clientes do dia a dia + leads),
       // a Júria só inicia atendimento de contato NOVO que venha de anúncio
       // (metadados do Meta) ou cuja 1ª mensagem contenha frase do anúncio.

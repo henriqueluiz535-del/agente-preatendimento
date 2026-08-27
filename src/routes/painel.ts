@@ -213,24 +213,26 @@ async function carregarAdv(){
     preencherFiltro();
     if(!tenants.length){el.innerHTML='<div class="vazio">Nenhum advogado cadastrado ainda. Clique em “+ Novo advogado”.</div>';return}
     const dono=papel()==='dono';
-    el.innerHTML=tenants.map(t=>\`
+    el.innerHTML=tenants.map(t=>{
+      const soCrm=t.modo_atendimento==='somente_crm';
+      return \`
       <div class="card">
         <button class="editIco" title="Editar dados do escritório" onclick="abrirEditar('\${t.evolution_instance}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
         <h3>\${esc(t.nome_escritorio)}</h3>
-        <div class="adv">\${esc(t.nome_advogado)} · assistente <b>\${esc(t.nome_assistente||'Júria')}</b></div>
+        <div class="adv">\${esc(t.nome_advogado)}\${soCrm?'':\` · assistente <b>\${esc(t.nome_assistente||'Júria')}</b>\`}</div>
         <div class="meta">Áreas: \${(t.areas&&t.areas.length)?esc(t.areas.join(', ')):'todas'}</div>
         <div class="meta">Aviso p/ advogado: \${esc(t.whatsapp_advogado||'—')}</div>
-        <div class="meta" style="margin-top:8px" id="st-\${t.evolution_instance}"><span class="badge off"><span class="dot"></span>verificando…</span></div>
+        <div class="meta" style="margin-top:8px" id="st-\${t.evolution_instance}">\${soCrm?'<span class="badge ok"><span class="dot"></span>Somente CRM (sem Júria)':'<span class="badge off"><span class="dot"></span>verificando…'}</span></div>
         <div class="acoes">
-          <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
+          \${soCrm?'':\`<button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>\`}
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
           <button class="btn ghost sm" onclick="verResumo('\${t.evolution_instance}',30)">Resumo</button>
           <button class="btn ghost sm" onclick="abrirCrm('\${t.evolution_instance}')">Acesso CRM</button>
-          \${dono?\`<button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
+          \${dono?\`\${soCrm?'':\`<button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>\`}
           <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>\`:''}
         </div>
-      </div>\`).join('');
-    tenants.forEach(t=>verificarStatus(t.evolution_instance));
+      </div>\`}).join('');
+    tenants.filter(t=>t.modo_atendimento!=='somente_crm').forEach(t=>verificarStatus(t.evolution_instance));
   }catch(e){el.innerHTML='<div class="vazio">Erro ao carregar: '+esc(e.message)+'</div>'}
 }
 async function verificarStatus(inst){
@@ -482,6 +484,10 @@ function abrirNovo(){
     <label>Nome do advogado(a) *</label><input id="f_adv" placeholder="Ex: Dra. Ana Silva"/>
     <label>Áreas (separadas por vírgula, opcional)</label><input id="f_areas" placeholder="previdenciário, trabalhista"/>
     <label>WhatsApp p/ receber leads (DDI+DDD, opcional)</label><input id="f_wpp" placeholder="5511999998888"/>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">
+      <input type="checkbox" id="f_socrm" style="width:auto" onchange="document.getElementById('f_btn').textContent=this.checked?'Cadastrar (somente CRM)':'Cadastrar e gerar QR'"/>
+      Somente CRM — cliente sem Júria (não conecta WhatsApp)
+    </label>
     <div class="erroMsg" id="f_erro"></div>
     <button class="btn" style="width:100%;margin-top:16px" id="f_btn" onclick="salvarNovo()">Cadastrar e gerar QR</button>\`);
 }
@@ -489,17 +495,27 @@ async function salvarNovo(){
   const b=document.getElementById('f_btn'); b.disabled=true; b.textContent='Criando…';
   document.getElementById('f_erro').textContent='';
   const areas=document.getElementById('f_areas').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const soCrm=document.getElementById('f_socrm').checked;
   const body={
     nome_escritorio:document.getElementById('f_esc').value.trim(),
     nome_advogado:document.getElementById('f_adv').value.trim(),
     areas, whatsapp_advogado:document.getElementById('f_wpp').value.trim()||undefined,
+    somente_crm:soCrm||undefined,
   };
-  if(!body.nome_escritorio||!body.nome_advogado){document.getElementById('f_erro').textContent='Preencha escritório e advogado.';b.disabled=false;b.textContent='Cadastrar e gerar QR';return}
+  if(!body.nome_escritorio||!body.nome_advogado){document.getElementById('f_erro').textContent='Preencha escritório e advogado.';b.disabled=false;b.textContent=soCrm?'Cadastrar (somente CRM)':'Cadastrar e gerar QR';return}
   try{
     const d=await api('/admin/tenants',{method:'POST',body:JSON.stringify(body)});
-    mostrarQR(d.qrcode,'Advogado cadastrado! Escaneie para conectar o WhatsApp:');
+    if(d.somente_crm){
+      abrirModal('<button class="fechar" onclick="fecharModal()">×</button>'+
+        '<h3>Escritório criado (Somente CRM)</h3>'+
+        '<p class="muted">Sem WhatsApp e sem Júria — o escritório usa apenas o CRM.</p>'+
+        '<div class="aviso">Próximo passo: clique em <b>Acesso CRM</b> no card do escritório pra gerar o link de convite e mandar pro advogado criar o login dele.</div>'+
+        '<button class="btn" style="width:100%;margin-top:10px" onclick="fecharModal()">Entendi</button>');
+    }else{
+      mostrarQR(d.qrcode,'Advogado cadastrado! Escaneie para conectar o WhatsApp:');
+    }
     carregarAdv();
-  }catch(e){document.getElementById('f_erro').textContent='Erro: '+e.message;b.disabled=false;b.textContent='Cadastrar e gerar QR'}
+  }catch(e){document.getElementById('f_erro').textContent='Erro: '+e.message;b.disabled=false;b.textContent=soCrm?'Cadastrar (somente CRM)':'Cadastrar e gerar QR'}
 }
 async function verQR(inst){
   abrirModal('<div class="qrbox" style="color:var(--muted)">Gerando QR…</div>',true);
@@ -519,19 +535,21 @@ function mostrarQR(qr,titulo){
 function abrirEditar(inst){
   const t=TENANTS.find(function(x){return x.evolution_instance===inst});
   if(!t)return;
+  const soCrm=t.modo_atendimento==='somente_crm';
   abrirModal(
     '<button class="fechar" onclick="fecharModal()">×</button>'+
     '<h3>Editar escritório</h3>'+
-    '<p class="muted">A conexão do WhatsApp não é afetada — só os dados do cadastro.</p>'+
+    '<p class="muted">'+(soCrm?'Cliente Somente CRM (sem Júria).':'A conexão do WhatsApp não é afetada — só os dados do cadastro.')+'</p>'+
     '<label>Nome do escritório</label><input id="e_esc" value="'+esc(t.nome_escritorio||'')+'"/>'+
     '<label>Nome do advogado(a)</label><input id="e_adv" value="'+esc(t.nome_advogado||'')+'"/>'+
     '<label>Áreas (separadas por vírgula)</label><input id="e_areas" value="'+esc((t.areas||[]).join(', '))+'"/>'+
     '<label>WhatsApp p/ receber leads (DDD+número)</label><input id="e_wpp" value="'+esc(t.whatsapp_advogado||'')+'"/>'+
+    (soCrm?'':(
     '<label>Quem a Júria atende</label><select id="e_modo">'+
       '<option value="todos"'+((t.modo_atendimento||'todos')==='todos'?' selected':'')+'>Todos os contatos novos (padrão)</option>'+
       '<option value="so_anuncio"'+(t.modo_atendimento==='so_anuncio'?' selected':'')+'>Só quem vem de anúncio (WhatsApp misto com clientes)</option>'+
     '</select>'+
-    '<label>Frases dos anúncios (separadas por vírgula — detecção reserva do modo "só anúncio")</label><input id="e_frases" placeholder="vi o anúncio, indenização da samarco" value="'+esc(t.frases_anuncio||'')+'"/>'+
+    '<label>Frases dos anúncios (separadas por vírgula — detecção reserva do modo "só anúncio")</label><input id="e_frases" placeholder="vi o anúncio, indenização da samarco" value="'+esc(t.frases_anuncio||'')+'"/>'))+
     '<div class="erroMsg" id="e_erro"></div>'+
     '<button class="btn" style="width:100%;margin-top:14px" id="e_btn" onclick="salvarEdicao(\\''+inst+'\\')">Salvar alterações</button>');
 }
@@ -543,9 +561,13 @@ async function salvarEdicao(inst){
     nome_advogado:document.getElementById('e_adv').value.trim(),
     areas:areas,
     whatsapp_advogado:document.getElementById('e_wpp').value.trim(),
-    modo_atendimento:document.getElementById('e_modo').value,
-    frases_anuncio:document.getElementById('e_frases').value.trim(),
   };
+  // Campos da Júria não existem no modal de um cliente Somente CRM.
+  const modoEl=document.getElementById('e_modo');
+  if(modoEl){
+    body.modo_atendimento=modoEl.value;
+    body.frases_anuncio=document.getElementById('e_frases').value.trim();
+  }
   try{
     await api('/admin/tenants/'+inst,{method:'PATCH',body:JSON.stringify(body)});
     fecharModal();

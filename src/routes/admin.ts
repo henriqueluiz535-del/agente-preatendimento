@@ -21,6 +21,7 @@ interface CriarTenantBody {
   evolution_instance?: string;
   modo_atendimento?: string;
   frases_anuncio?: string;
+  somente_crm?: boolean;
 }
 
 /**
@@ -122,9 +123,15 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const instance =
       body.evolution_instance || `${slugify(body.nome_escritorio)}-${Date.now().toString(36)}`;
 
+    // Cliente "Somente CRM": sem WhatsApp e sem Júria — não cria instância no
+    // Evolution. O escritório usa apenas o CRM (leads manuais, agenda, funil).
+    // Marcado via modo_atendimento='somente_crm' (nenhum webhook chega mesmo,
+    // já que não existe número conectado).
+    const somenteCrm = body.somente_crm === true;
+
     try {
       // 1. Cria a instância no Evolution (webhook já configurado)
-      await createInstance(instance);
+      if (!somenteCrm) await createInstance(instance);
 
       // 2. Persiste o tenant
       const tenant = await createTenant({
@@ -139,6 +146,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         horario_atendimento: body.horario_atendimento ?? 'Segunda a sexta, das 9h às 18h',
         whatsapp_advogado: normalizarWhatsapp(body.whatsapp_advogado),
         evolution_instance: instance,
+        ...(somenteCrm ? { modo_atendimento: 'somente_crm' } : {}),
       });
 
       // 3. Cria o acesso ao CRM (plug and play), se veio e-mail
@@ -147,6 +155,15 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         const senha = gerarSenhaAleatoria();
         await criarUsuarioCrm(tenant.id, body.email_advogado, senha, body.nome_advogado);
         crm = { email: body.email_advogado.trim().toLowerCase(), senha };
+      }
+
+      if (somenteCrm) {
+        return reply.send({
+          tenant: { id: tenant.id, evolution_instance: instance },
+          somente_crm: true,
+          crm,
+          instrucao: 'Escritório criado no modo Somente CRM. Gere o link de convite em "Acesso CRM" no card.',
+        });
       }
 
       // 4. Busca o QR Code de conexão

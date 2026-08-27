@@ -136,7 +136,10 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
       if (msg.anexo) texto = texto ? `${msg.anexo} ${texto}` : msg.anexo;
 
       if (!texto) return;
-      await handleLeadMessage(tenant, msg.contato, msg.nomeContato, texto);
+      await handleLeadMessage(tenant, msg.contato, msg.nomeContato, texto, {
+        id: msg.anuncioId,
+        titulo: msg.anuncioTitulo,
+      });
     } catch (err) {
       logger.error({ err, instance }, 'Erro ao processar webhook');
     }

@@ -244,7 +244,7 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
     ],
   },
   {
-    area: 'golpe do Pix / fraude bancária',
+    area: 'bancário — golpe do Pix / fraude',
     perguntas: [
       'Quando o golpe aconteceu? (ESSENCIAL — sempre pergunte)',
       'Qual foi o valor perdido? (ESSENCIAL — sempre pergunte)',
@@ -429,7 +429,21 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
   },
 ];
 
-/** Monta um bloco de texto com as perguntas de todas as áreas, para o system prompt. */
+// Triagem genérica para temas fora das áreas declaradas do escritório
+// (usada apenas quando o prompt é enxugado para as áreas do tenant).
+const BLOCO_BASICO = `### qualquer outro tema (triagem básica)
+Se o caso não se encaixar em nenhum bloco acima, faça a triagem básica — o advogado avalia depois:
+- O que aconteceu, com quem e quando?
+- Há valores envolvidos? Quais?
+- Existe documento/contrato relacionado? A pessoa o possui?
+- Qual a urgência (prazo, audiência, risco iminente)?`;
+
+/**
+ * Monta o bloco de perguntas para o system prompt.
+ * Se o tenant declarou áreas, inclui SOMENTE os blocos dessas áreas + a
+ * triagem básica (economia de ~30-40% de tokens por chamada). Sem áreas
+ * declaradas (ou "todas"), inclui o acervo completo.
+ */
 export function templatesParaPrompt(areasDoTenant: string[]): string {
   const normal = (s: string) =>
     s
@@ -437,28 +451,35 @@ export function templatesParaPrompt(areasDoTenant: string[]): string {
       .normalize('NFD')
       .replace(/[̀-ͯ]/g, '');
 
-  // Se o tenant declarou áreas, priorizamos (mas mantemos todas como fallback,
-  // pois o lead pode chegar com um tema diferente do esperado).
-  // Sub-teses ("área — tese") contam como da área declarada correspondente.
-  const declaradas = areasDoTenant.map(normal);
+  const declaradas = areasDoTenant
+    .map(normal)
+    .map((a) => a.trim())
+    .filter((a) => a && a !== 'todas' && a !== 'todas as areas' && a !== 'geral');
+
   const ehDeclarada = (area: string) => {
     // "previdenciário — auxílio-doença" e "previdenciário (geral)" contam
     // como a área-base "previdenciário".
     const base = normal(area).split(' — ')[0].split(' (')[0].trim();
-    return declaradas.some((d) => d === base || d.startsWith(base) || base.startsWith(d));
+    return declaradas.some(
+      (d) => d === base || d.startsWith(base) || base.startsWith(d) || base.includes(d),
+    );
   };
-  const ordenados = [...INTAKE_TEMPLATES]
-    .map((t, i) => ({ t, i }))
-    .sort((x, y) => {
-      const xDecl = ehDeclarada(x.t.area) ? 0 : 1;
-      const yDecl = ehDeclarada(y.t.area) ? 0 : 1;
-      // Ordenação estável: mantém a ordem original dentro de cada grupo,
-      // preservando sub-teses junto do bloco geral da área.
-      return xDecl - yDecl || x.i - y.i;
-    })
-    .map(({ t }) => t);
 
-  return ordenados
+  let selecionados = INTAKE_TEMPLATES;
+  let incluirBasico = false;
+  if (declaradas.length > 0) {
+    const filtrados = INTAKE_TEMPLATES.filter((t) => ehDeclarada(t.area));
+    // Se nenhuma área bateu (ex: erro de digitação no cadastro), mantém o
+    // acervo completo por segurança.
+    if (filtrados.length > 0) {
+      selecionados = filtrados;
+      incluirBasico = true;
+    }
+  }
+
+  const blocos = selecionados
     .map((t) => `### ${t.area}\n` + t.perguntas.map((p) => `- ${p}`).join('\n'))
     .join('\n\n');
+
+  return incluirBasico ? `${blocos}\n\n${BLOCO_BASICO}` : blocos;
 }

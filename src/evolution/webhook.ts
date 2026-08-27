@@ -10,6 +10,8 @@ export interface IncomingMessage {
   messageId: string | null;
   veioDeAnuncio: boolean; // mensagem originada de clique em anúncio (Meta CTWA)
   anexo: string | null; // marcador "[anexo recebido...]" quando o lead envia arquivo/foto
+  anuncioId: string | null; // ID do anúncio/criativo (metadados do clique)
+  anuncioTitulo: string | null; // título do anúncio, quando disponível
 }
 
 export function parseIncoming(payload: any): IncomingMessage | null {
@@ -47,6 +49,20 @@ export function parseIncoming(payload: any): IncomingMessage | null {
     JSON.stringify(msg),
   );
 
+  // Identificação do criativo/anúncio que originou o clique (quando presente).
+  const ctxInfo =
+    msg.extendedTextMessage?.contextInfo ??
+    msg.imageMessage?.contextInfo ??
+    msg.videoMessage?.contextInfo ??
+    msg.conversationContextInfo ??
+    null;
+  const adReply = ctxInfo?.externalAdReply ?? null;
+  const anuncioId: string | null =
+    (adReply?.sourceId && String(adReply.sourceId)) ||
+    (adReply?.ctwaClid && String(adReply.ctwaClid).slice(0, 40)) ||
+    null;
+  const anuncioTitulo: string | null = adReply?.title ? String(adReply.title).slice(0, 120) : null;
+
   return {
     fromMe: Boolean(data.key.fromMe),
     contato: remoteJid.replace(/@s\.whatsapp\.net$/, '').replace(/@g\.us$/, ''),
@@ -57,5 +73,7 @@ export function parseIncoming(payload: any): IncomingMessage | null {
     messageId: data.key.id ?? null,
     veioDeAnuncio,
     anexo,
+    anuncioId,
+    anuncioTitulo,
   };
 }

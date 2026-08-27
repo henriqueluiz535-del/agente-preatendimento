@@ -146,7 +146,10 @@ const HTML = /* html */ `<!doctype html>
     <section id="secLeads" class="hidden">
       <div class="row">
         <h2>Leads capturados</h2>
-        <select id="filtroLead" style="max-width:260px" onchange="carregarLeads()"></select>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filtroLead" style="max-width:260px" onchange="carregarLeads()"></select>
+          <button class="btn ghost sm" onclick="verCriativos(30)">Por criativo</button>
+        </div>
       </div>
       <div id="listaLeads"></div>
     </section>
@@ -271,6 +274,51 @@ async function carregarLeads(){
 function verLeads(tid){document.getElementById('filtroLead').value=tid;mostrar('leads')}
 
 let LEADS_ADMIN=[];
+
+// ---- Relatório por criativo (CPL/CPO calculados ao digitar o gasto) ----
+let GRUPOS_CRIATIVO=[];
+function verCriativos(dias){
+  dias=Number(dias)||30;
+  const de=Date.now()-dias*86400000;
+  const mapa={};
+  LEADS_ADMIN.forEach(function(l){
+    if(!l.created_at||new Date(l.created_at).getTime()<de)return;
+    const rotulo=l.criativo_titulo||l.criativo||(l.primeira_msg?('“'+String(l.primeira_msg).slice(0,60)+'”'):'(sem identificação)');
+    if(!mapa[rotulo])mapa[rotulo]={leads:0,ops:0};
+    mapa[rotulo].leads++;
+    const op=l.qualificado===true||['qualificado','reuniao','proposta','negociacao','fechado'].indexOf(l.etapa)>=0;
+    if(op)mapa[rotulo].ops++;
+  });
+  GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){return {rotulo:k,leads:mapa[k].leads,ops:mapa[k].ops}})
+    .sort(function(a,b){return b.leads-a.leads});
+  let h='<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Leads por criativo</h3>'+
+    '<select style="max-width:180px;margin-top:6px" onchange="verCriativos(this.value)">'+
+    [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].map(function(o){
+      return '<option value="'+o[0]+'"'+(dias===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
+    '</select>'+
+    '<p class="muted" style="margin-top:8px">Oportunidade = lead qualificado pela Júria ou avançado no CRM. Digite o gasto do período de cada criativo pra ver custo por lead (CPL) e por oportunidade (CPO).</p>';
+  if(!GRUPOS_CRIATIVO.length){
+    h+='<div class="muted" style="padding:14px 0">Nenhum lead no período (no filtro de advogado selecionado). Os dados de criativo passam a ser gravados a partir de agora.</div>';
+  }
+  GRUPOS_CRIATIVO.forEach(function(g,i){
+    h+='<div style="border-bottom:1px solid var(--linha);padding:9px 0;font-size:13px">'+
+      '<b>'+esc(g.rotulo)+'</b>'+
+      '<div class="muted" style="margin:3px 0">'+g.leads+' leads · '+g.ops+' oportunidades ('+Math.round(g.ops/g.leads*100)+'%)</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+      '<input type="number" placeholder="Gasto R$" style="max-width:110px;padding:6px 8px" oninput="calcCriativo('+i+',this.value)"/>'+
+      '<span class="muted" id="cpl'+i+'">CPL: —</span><span class="muted" id="cpo'+i+'">CPO: —</span>'+
+      '</div></div>';
+  });
+  abrirModal(h);
+}
+function calcCriativo(i,gasto){
+  const g=GRUPOS_CRIATIVO[i]; const v=Number(gasto);
+  const fmt=function(x){return 'R$ '+x.toLocaleString('pt-BR',{maximumFractionDigits:2})};
+  document.getElementById('cpl'+i).textContent='CPL: '+(v>0&&g.leads?fmt(v/g.leads):'—');
+  document.getElementById('cpo'+i).textContent='CPO: '+(v>0&&g.ops?fmt(v/g.ops):'—');
+}
+
 async function verLead(id){
   const l=LEADS_ADMIN.find(function(x){return x.id===id});
   if(!l)return;

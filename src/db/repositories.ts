@@ -322,6 +322,29 @@ export async function ensureLead(conversationId: string, tenantId: string, nome?
   if (error) throw error;
 }
 
+/**
+ * Grava a atribuição do lead (criativo + primeira mensagem) UMA única vez —
+ * só escreve enquanto primeira_msg estiver vazia. Tolerante à ausência das
+ * colunas (migração ainda não aplicada): loga e segue sem quebrar o fluxo.
+ */
+export async function registrarAtribuicao(
+  conversationId: string,
+  criativoId: string | null,
+  criativoTitulo: string | null,
+  primeiraMsg: string,
+): Promise<void> {
+  const { error } = await db
+    .from('leads')
+    .update({
+      criativo: criativoId,
+      criativo_titulo: criativoTitulo,
+      primeira_msg: primeiraMsg.slice(0, 160),
+    })
+    .eq('conversation_id', conversationId)
+    .is('primeira_msg', null);
+  if (error) throw error;
+}
+
 /** Avança a etapa do funil para "qualificado" (sem regredir etapas movidas pelo advogado). */
 export async function marcarEtapaQualificado(conversationId: string): Promise<void> {
   const { error } = await db

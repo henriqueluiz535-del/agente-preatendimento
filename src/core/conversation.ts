@@ -10,6 +10,7 @@ import {
   touchLeadActivity,
   ensureLead,
   marcarEtapaQualificado,
+  registrarAtribuicao,
 } from '../db/repositories.js';
 import { pensar } from '../agent/brain.js';
 import { sendText } from '../evolution/client.js';
@@ -24,6 +25,7 @@ export async function handleLeadMessage(
   contato: string,
   nomeContato: string | null,
   texto: string,
+  anuncio?: { id: string | null; titulo: string | null },
 ): Promise<void> {
   const conversa = await getOrCreateConversation(tenant.id, contato, nomeContato);
 
@@ -69,6 +71,13 @@ export async function handleLeadMessage(
   await addMessage(conversa.id, 'user', texto);
   await touchLeadActivity(conversa.id); // zera o ciclo de follow-ups
   await ensureLead(conversa.id, tenant.id, nomeContato); // entra no funil do CRM ("novo")
+
+  // Atribuição do criativo (só grava na primeira mensagem do lead).
+  try {
+    await registrarAtribuicao(conversa.id, anuncio?.id ?? null, anuncio?.titulo ?? null, texto);
+  } catch (err) {
+    logger.warn({ err }, 'Falha ao registrar atribuição do criativo (migração pendente?)');
+  }
 
   const history = await getRecentMessages(conversa.id, 30);
   const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, history);

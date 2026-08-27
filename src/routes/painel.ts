@@ -291,23 +291,65 @@ function verCriativos(dias){
   });
   GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){return {rotulo:k,leads:mapa[k].leads,ops:mapa[k].ops}})
     .sort(function(a,b){return b.leads-a.leads});
+
+  // Chegadas por dia (todos os leads do período, no filtro de advogado atual)
+  const porDia={};
+  LEADS_ADMIN.forEach(function(l){
+    if(!l.created_at||new Date(l.created_at).getTime()<de)return;
+    const d=new Date(l.created_at); const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    porDia[k]=(porDia[k]||0)+1;
+  });
+  let barras=''; let maxDia=1; const seq=[];
+  for(let n=dias-1;n>=0;n--){
+    const d=new Date(Date.now()-n*86400000);
+    const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    const qtd=porDia[k]||0; if(qtd>maxDia)maxDia=qtd;
+    seq.push({rotulo:('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2),qtd:qtd});
+  }
+  const totalPeriodo=seq.reduce(function(a,x){return a+x.qtd},0);
+  seq.forEach(function(x){
+    const alt=Math.max(4,Math.round(x.qtd/maxDia*100));
+    barras+='<div title="'+x.rotulo+' — '+x.qtd+' lead(s)" style="flex:1;height:'+alt+'%;min-height:3px;border-radius:2px 2px 0 0;background:'+(x.qtd?'var(--dourado)':'#242424')+'"></div>';
+  });
+
   let h='<button class="fechar" onclick="fecharModal()">×</button>'+
-    '<h3>Leads por criativo</h3>'+
+    '<h3>Desempenho dos anúncios</h3>'+
     '<select style="max-width:180px;margin-top:6px" onchange="verCriativos(this.value)">'+
     [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].map(function(o){
       return '<option value="'+o[0]+'"'+(dias===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
     '</select>'+
-    '<p class="muted" style="margin-top:8px">Oportunidade = lead qualificado pela Júria ou avançado no CRM. Digite o gasto do período de cada criativo pra ver custo por lead (CPL) e por oportunidade (CPO).</p>';
+    '<div style="background:#141414;border:1px solid var(--linha);border-radius:12px;padding:12px 14px;margin:14px 0">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'+
+        '<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.6px">Chegada de leads por dia</span>'+
+        '<span style="font-size:13px"><b style="color:var(--dourado)">'+totalPeriodo+'</b> <span class="muted">no período</span></span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:flex-end;gap:2px;height:64px">'+barras+'</div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:5px" class="muted"><span style="font-size:11px">'+seq[0].rotulo+'</span><span style="font-size:11px">hoje</span></div>'+
+    '</div>'+
+    '<p class="muted" style="margin:0 0 10px;font-size:12px">Oportunidade = lead qualificado pela Júria ou avançado no CRM. Digite o gasto do período de cada criativo pra ver CPL e CPO na hora.</p>';
   if(!GRUPOS_CRIATIVO.length){
     h+='<div class="muted" style="padding:14px 0">Nenhum lead no período (no filtro de advogado selecionado). Os dados de criativo passam a ser gravados a partir de agora.</div>';
   }
   GRUPOS_CRIATIVO.forEach(function(g,i){
-    h+='<div style="border-bottom:1px solid var(--linha);padding:9px 0;font-size:13px">'+
-      '<b>'+esc(g.rotulo)+'</b>'+
-      '<div class="muted" style="margin:3px 0">'+g.leads+' leads · '+g.ops+' oportunidades ('+Math.round(g.ops/g.leads*100)+'%)</div>'+
-      '<div style="display:flex;gap:8px;align-items:center">'+
+    const pct=Math.round(g.ops/g.leads*100);
+    const cor=pct>=30?'#35c46f':(pct>=10?'var(--dourado)':'#6f6a60');
+    h+='<div style="background:#141414;border:1px solid var(--linha);border-radius:12px;padding:12px 14px;margin-bottom:10px">'+
+      '<div style="display:flex;gap:8px;align-items:baseline">'+
+        '<span style="color:var(--dourado);font-weight:800;font-size:13px">#'+(i+1)+'</span>'+
+        '<b style="font-size:13px;line-height:1.35">'+esc(g.rotulo)+'</b>'+
+      '</div>'+
+      '<div style="display:flex;gap:22px;margin:10px 0 6px">'+
+        '<div><div style="font-size:20px;font-weight:800">'+g.leads+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Leads</div></div>'+
+        '<div><div style="font-size:20px;font-weight:800">'+g.ops+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Oportunidades</div></div>'+
+        '<div><div style="font-size:20px;font-weight:800;color:'+cor+'">'+pct+'%</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Conversão</div></div>'+
+      '</div>'+
+      '<div style="height:5px;background:#242424;border-radius:3px;overflow:hidden;margin-bottom:10px">'+
+        '<div style="height:100%;width:'+pct+'%;background:'+cor+'"></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
       '<input type="number" placeholder="Gasto R$" style="max-width:110px;padding:6px 8px" oninput="calcCriativo('+i+',this.value)"/>'+
-      '<span class="muted" id="cpl'+i+'">CPL: —</span><span class="muted" id="cpo'+i+'">CPO: —</span>'+
+      '<span id="cpl'+i+'" style="background:#1c1c1c;border:1px solid var(--linha);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)">CPL —</span>'+
+      '<span id="cpo'+i+'" style="background:#1c1c1c;border:1px solid var(--linha);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)">CPO —</span>'+
       '</div></div>';
   });
   abrirModal(h);
@@ -315,8 +357,15 @@ function verCriativos(dias){
 function calcCriativo(i,gasto){
   const g=GRUPOS_CRIATIVO[i]; const v=Number(gasto);
   const fmt=function(x){return 'R$ '+x.toLocaleString('pt-BR',{maximumFractionDigits:2})};
-  document.getElementById('cpl'+i).textContent='CPL: '+(v>0&&g.leads?fmt(v/g.leads):'—');
-  document.getElementById('cpo'+i).textContent='CPO: '+(v>0&&g.ops?fmt(v/g.ops):'—');
+  const pinta=function(id,txt,ligado){
+    const el=document.getElementById(id); if(!el)return;
+    el.textContent=txt;
+    el.style.color=ligado?'var(--texto)':'var(--muted)';
+    el.style.borderColor=ligado?'rgba(232,184,75,.55)':'var(--linha)';
+    el.style.fontWeight=ligado?'700':'400';
+  };
+  pinta('cpl'+i,'CPL '+(v>0&&g.leads?fmt(v/g.leads):'—'),v>0&&g.leads>0);
+  pinta('cpo'+i,'CPO '+(v>0&&g.ops?fmt(v/g.ops):'—'),v>0&&g.ops>0);
 }
 
 async function verLead(id){

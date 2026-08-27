@@ -457,11 +457,19 @@ export function templatesParaPrompt(areasDoTenant: string[]): string {
     .filter((a) => a && a !== 'todas' && a !== 'todas as areas' && a !== 'geral');
 
   const ehDeclarada = (area: string) => {
+    const completa = normal(area); // nome inteiro do bloco (área — tese)
     // "previdenciário — auxílio-doença" e "previdenciário (geral)" contam
     // como a área-base "previdenciário".
-    const base = normal(area).split(' — ')[0].split(' (')[0].trim();
+    const base = completa.split(' — ')[0].split(' (')[0].trim();
     return declaradas.some(
-      (d) => d === base || d.startsWith(base) || base.startsWith(d) || base.includes(d),
+      (d) =>
+        d === base ||
+        d.startsWith(base) ||
+        base.startsWith(d) ||
+        base.includes(d) ||
+        // casamento por TESE: "bpc" encontra "previdenciário — BPC/LOAS",
+        // "auxílio-doença" encontra o bloco da tese etc.
+        completa.includes(d),
     );
   };
 

@@ -99,18 +99,24 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     if (!u) return;
     const b = (req.body ?? {}) as any;
     if (!b.nome) return reply.code(400).send({ error: 'nome é obrigatório' });
+    const registro: Record<string, unknown> = {
+      tenant_id: u.tenant_id,
+      nome: b.nome,
+      area_juridica: b.area_juridica ?? null,
+      resumo_caso: b.resumo_caso ?? null,
+      origem: b.origem ?? 'indicação',
+      etapa: 'qualificado',
+      qualificado: true,
+      dados: b.contato ? { contato_manual: b.contato } : {},
+    };
+    // Data de chegada retroativa (opcional) — para registrar com atraso um
+    // contato que chegou dias antes.
+    if (b.data_chegada && !Number.isNaN(Date.parse(b.data_chegada))) {
+      registro.created_at = new Date(b.data_chegada).toISOString();
+    }
     const { data, error } = await db
       .from('leads')
-      .insert({
-        tenant_id: u.tenant_id,
-        nome: b.nome,
-        area_juridica: b.area_juridica ?? null,
-        resumo_caso: b.resumo_caso ?? null,
-        origem: b.origem ?? 'indicação',
-        etapa: 'qualificado',
-        qualificado: true,
-        dados: b.contato ? { contato_manual: b.contato } : {},
-      })
+      .insert(registro)
       .select('*')
       .single();
     if (error) return reply.code(500).send({ error: error.message });

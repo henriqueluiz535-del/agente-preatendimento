@@ -447,13 +447,16 @@ function modalNovoLead(){
   var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Novo lead manual</h3>'+
   '<label>Nome *</label><input id="nl_nome"/><label>Contato (WhatsApp)</label><input id="nl_ctt" placeholder="82999998888"/>'+
   '<label>Área</label><input id="nl_area" placeholder="previdenciário"/>'+
+  '<label>Data de chegada (opcional — deixe vazio para hoje)</label><input id="nl_data" type="date"/>'+
   '<label>Origem</label><select id="nl_orig">'+ORIGENS.map(function(o){return '<option>'+esc(o)+'</option>'}).join('')+'</select>'+
   '<div class="erroMsg" id="nl_erro"></div><button class="btn" style="width:100%;margin-top:12px" onclick="salvarNovoLead()">Cadastrar</button>';
   abrirModal(h);
 }
 function salvarNovoLead(){
+  var dataChegada=document.getElementById('nl_data').value;
   var body={nome:document.getElementById('nl_nome').value.trim(),contato:document.getElementById('nl_ctt').value.trim(),
-    area_juridica:document.getElementById('nl_area').value.trim()||null,origem:document.getElementById('nl_orig').value};
+    area_juridica:document.getElementById('nl_area').value.trim()||null,origem:document.getElementById('nl_orig').value,
+    data_chegada:dataChegada?new Date(dataChegada+'T12:00:00').toISOString():undefined};
   if(!body.nome){document.getElementById('nl_erro').textContent='Informe o nome.';return}
   api('/api/crm/leads',{method:'POST',body:JSON.stringify(body)})
     .then(function(){fecharModal();carregarLeads().then(renderFunil)})

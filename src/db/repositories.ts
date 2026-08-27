@@ -221,6 +221,46 @@ export async function registerFollowupSent(conversationId: string, n: number): P
   if (error) throw error;
 }
 
+/** Resumo do CRM de um escritório (para o painel da agência). Custo zero de IA. */
+export async function resumoCrmTenant(tenantId: string, dias: number): Promise<any> {
+  const de = new Date(Date.now() - dias * 86_400_000).toISOString();
+  const agora = new Date().toISOString();
+  const [leadsQ, eventosQ, fechQ] = await Promise.all([
+    db.from('leads').select('id, etapa, qualificado, created_at').eq('tenant_id', tenantId).gte('created_at', de),
+    db.from('crm_eventos').select('tipo, inicio, concluido, status').eq('tenant_id', tenantId),
+    db
+      .from('crm_fechamentos')
+      .select('honorario_inicial, inicial_recebido, honorario_final_estimado, created_at')
+      .eq('tenant_id', tenantId)
+      .gte('created_at', de),
+  ]);
+  const leads = leadsQ.data ?? [];
+  const evs = (eventosQ.data ?? []).filter((e: any) => e.tipo !== 'followup');
+  const fech = fechQ.data ?? [];
+  const stEv = (e: any) => e.status ?? (e.concluido ? 'realizada' : 'pendente');
+  const soma = (c: string) => fech.reduce((a: number, f: any) => a + Number(f[c] ?? 0), 0);
+  return {
+    periodo_dias: dias,
+    leads: leads.length,
+    qualificados: leads.filter(
+      (l: any) =>
+        l.qualificado === true ||
+        ['qualificado', 'reuniao', 'proposta', 'negociacao', 'fechado'].includes(l.etapa),
+    ).length,
+    reunioes_agendadas: evs.filter((e: any) => stEv(e) === 'pendente' && e.inicio >= agora).length,
+    reunioes_realizadas: evs.filter(
+      (e: any) =>
+        stEv(e) !== 'nao_compareceu' &&
+        (e.concluido || stEv(e) === 'realizada' || e.inicio < agora) &&
+        e.inicio >= de,
+    ).length,
+    fechamentos: fech.length,
+    honorarios_iniciais: soma('honorario_inicial'),
+    honorarios_recebidos: soma('inicial_recebido'),
+    honorarios_finais_estimados: soma('honorario_final_estimado'),
+  };
+}
+
 export async function getTenantById(tenantId: string): Promise<Tenant | null> {
   const { data, error } = await db
     .from('tenants')

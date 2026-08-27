@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
@@ -176,6 +176,16 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { tenant_id } = req.query as { tenant_id?: string };
     const leads = await listLeads(tenant_id);
     return reply.send({ leads });
+  });
+
+  // Resumo do CRM do escritório (acompanhamento da entrega pela agência)
+  app.get('/admin/tenants/:instance/crm-resumo', async (req, reply) => {
+    const { instance } = req.params as { instance: string };
+    const { dias } = req.query as { dias?: string };
+    const tenant = await getTenantByInstance(instance);
+    if (!tenant) return reply.code(404).send({ error: 'tenant não encontrado' });
+    const nDias = Math.min(Math.max(Number(dias) || 30, 1), 365);
+    return reply.send(await resumoCrmTenant(tenant.id, nDias));
   });
 
   // Conversa completa de um lead (ficha aberta no painel)

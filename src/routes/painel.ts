@@ -221,6 +221,7 @@ async function carregarAdv(){
         <div class="acoes">
           <button class="btn sm" onclick="verQR('\${t.evolution_instance}')">Conectar / QR</button>
           <button class="btn ghost sm" onclick="verLeads('\${t.id}')">Ver leads</button>
+          <button class="btn ghost sm" onclick="verResumo('\${t.evolution_instance}',30)">Resumo</button>
           <button class="btn ghost sm" onclick="abrirCrm('\${t.evolution_instance}')">Acesso CRM</button>
           \${dono?\`<button class="btn ghost sm" onclick="desconectar('\${t.evolution_instance}')">Desconectar</button>
           <button class="btn danger sm" onclick="abrirExcluir('\${t.evolution_instance}')">Excluir</button>\`:''}
@@ -389,6 +390,34 @@ async function salvarEdicao(inst){
   }
 }
 
+async function verResumo(inst,dias){
+  dias=Number(dias)||30;
+  const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
+  abrirModal(
+    '<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Resumo do CRM — '+esc(t.nome_escritorio||'')+'</h3>'+
+    '<select style="max-width:180px;margin-top:6px" onchange="verResumo(\\''+inst+'\\',this.value)">'+
+    [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].map(function(o){
+      return '<option value="'+o[0]+'"'+(dias===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
+    '</select>'+
+    '<div id="rsBox" class="muted" style="margin-top:10px">Carregando…</div>');
+  try{
+    const d=await api('/admin/tenants/'+inst+'/crm-resumo?dias='+dias);
+    const box=document.getElementById('rsBox'); if(!box)return;
+    const dinheiro=function(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR')};
+    box.innerHTML='<div class="fichaL">'+
+      '<b>Leads no período:</b> '+d.leads+' ('+d.qualificados+' qualificados)<br/>'+
+      '<b>Reuniões:</b> '+d.reunioes_realizadas+' realizadas · '+d.reunioes_agendadas+' agendadas<br/>'+
+      '<b>Vendas fechadas:</b> '+d.fechamentos+'<br/>'+
+      '<b>Honorários iniciais:</b> '+dinheiro(d.honorarios_iniciais)+' ('+dinheiro(d.honorarios_recebidos)+' recebidos)<br/>'+
+      '<b>Estimativa de êxito:</b> '+dinheiro(d.honorarios_finais_estimados)+
+      '</div>'+
+      '<p class="muted" style="margin-top:10px">Dados do CRM do escritório — reuniões e fechamentos dependem do advogado usar o sistema.</p>';
+  }catch(e){
+    const box=document.getElementById('rsBox');
+    if(box)box.innerHTML='Erro: '+esc(e.message);
+  }
+}
 function abrirCrm(inst){
   const t=TENANTS.find(function(x){return x.evolution_instance===inst})||{};
   abrirModal(

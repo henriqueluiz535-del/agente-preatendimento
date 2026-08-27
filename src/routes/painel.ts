@@ -278,18 +278,41 @@ let LEADS_ADMIN=[];
 // ---- Relatório por criativo (CPL/CPO calculados ao digitar o gasto) ----
 let GRUPOS_CRIATIVO=[];
 let APELIDOS_CRIATIVO=null;
-let DIAS_CRIATIVO=30;
-async function verCriativos(dias){
-  dias=Number(dias)||30;
-  DIAS_CRIATIVO=dias;
+// Período do relatório: atalho em dias OU intervalo livre de datas (de/até).
+let PERIODO_CRIATIVO={dias:30,de:null,ate:null};
+function verCriativos(dias){
+  PERIODO_CRIATIVO={dias:Number(dias)||30,de:null,ate:null};
+  renderCriativos();
+}
+function verCriativosCustom(){
+  const de=document.getElementById('crDe').value, ate=document.getElementById('crAte').value;
+  if(!de||!ate){alert('Preencha as duas datas do período.');return}
+  if(de>ate){alert('A data inicial precisa vir antes da final.');return}
+  PERIODO_CRIATIVO={dias:null,de:de,ate:ate};
+  renderCriativos();
+}
+async function renderCriativos(){
   if(!APELIDOS_CRIATIVO){
     try{APELIDOS_CRIATIVO=(await api('/admin/criativos/apelidos')).apelidos||{}}
     catch(e){APELIDOS_CRIATIVO={}}
   }
-  const de=Date.now()-dias*86400000;
+  const p=PERIODO_CRIATIVO;
+  let deMs, ateMs;
+  if(p.de&&p.ate){
+    deMs=new Date(p.de+'T00:00:00').getTime();
+    ateMs=new Date(p.ate+'T23:59:59').getTime();
+  }else{
+    ateMs=Date.now();
+    deMs=ateMs-(p.dias||30)*86400000;
+  }
+  const noPeriodo=function(l){
+    if(!l.created_at)return false;
+    const t=new Date(l.created_at).getTime();
+    return t>=deMs&&t<=ateMs;
+  };
   const mapa={};
   LEADS_ADMIN.forEach(function(l){
-    if(!l.created_at||new Date(l.created_at).getTime()<de)return;
+    if(!noPeriodo(l))return;
     const chave=l.criativo||l.criativo_titulo||(l.primeira_msg?('msg:'+String(l.primeira_msg).slice(0,60)):'(sem identificação)');
     const original=l.criativo_titulo||l.criativo||(l.primeira_msg?('“'+String(l.primeira_msg).slice(0,60)+'”'):'(sem identificação)');
     if(!mapa[chave])mapa[chave]={leads:0,ops:0,id:null,original:original};
@@ -304,39 +327,60 @@ async function verCriativos(dias){
       renomeado:!!APELIDOS_CRIATIVO[k],leads:m.leads,ops:m.ops,id:m.id};
   }).sort(function(a,b){return b.leads-a.leads});
 
-  // Chegadas por dia (todos os leads do período, no filtro de advogado atual)
+  // Chegadas por dia (períodos longos são agrupados por semana pra caber)
   const porDia={};
   LEADS_ADMIN.forEach(function(l){
-    if(!l.created_at||new Date(l.created_at).getTime()<de)return;
+    if(!noPeriodo(l))return;
     const d=new Date(l.created_at); const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
     porDia[k]=(porDia[k]||0)+1;
   });
-  let barras=''; let maxDia=1; const seq=[];
-  for(let n=dias-1;n>=0;n--){
-    const d=new Date(Date.now()-n*86400000);
+  const dia0=new Date(deMs); dia0.setHours(0,0,0,0);
+  const totalDias=Math.max(1,Math.round((ateMs-dia0.getTime())/86400000));
+  const porSemana=totalDias>95;
+  const fmtDia=function(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)};
+  let barras=''; let maxB=1; const seq=[];
+  for(let n=0;n<totalDias;n++){
+    const d=new Date(dia0.getTime()+n*86400000);
+    if(d.getTime()>ateMs)break;
     const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
-    const qtd=porDia[k]||0; if(qtd>maxDia)maxDia=qtd;
-    seq.push({rotulo:('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2),qtd:qtd});
+    const qtd=porDia[k]||0;
+    if(porSemana){
+      const s=Math.floor(n/7);
+      if(!seq[s])seq[s]={rotulo:'semana de '+fmtDia(d),qtd:0};
+      seq[s].qtd+=qtd;
+    }else{
+      seq.push({rotulo:fmtDia(d),qtd:qtd});
+    }
   }
+  seq.forEach(function(x){if(x.qtd>maxB)maxB=x.qtd});
   const totalPeriodo=seq.reduce(function(a,x){return a+x.qtd},0);
   seq.forEach(function(x){
-    const alt=Math.max(4,Math.round(x.qtd/maxDia*100));
+    const alt=Math.max(4,Math.round(x.qtd/maxB*100));
     barras+='<div title="'+x.rotulo+' — '+x.qtd+' lead(s)" style="flex:1;height:'+alt+'%;min-height:3px;border-radius:2px 2px 0 0;background:'+(x.qtd?'var(--dourado)':'#242424')+'"></div>';
   });
+  const rotuloFim=p.ate?fmtDia(new Date(p.ate+'T12:00:00')):'hoje';
 
   let h='<button class="fechar" onclick="fecharModal()">×</button>'+
     '<h3>Desempenho dos anúncios</h3>'+
-    '<select style="max-width:180px;margin-top:6px" onchange="verCriativos(this.value)">'+
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">'+
+    '<select style="max-width:170px" onchange="verCriativos(this.value)">'+
+    (p.dias?'':'<option selected>Personalizado</option>')+
     [[7,'Últimos 7 dias'],[30,'Últimos 30 dias'],[90,'Últimos 90 dias']].map(function(o){
-      return '<option value="'+o[0]+'"'+(dias===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
+      return '<option value="'+o[0]+'"'+(p.dias===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+
     '</select>'+
+    '<span class="muted" style="font-size:12px">ou de</span>'+
+    '<input type="date" id="crDe" value="'+(p.de||'')+'" style="max-width:150px;padding:6px 8px"/>'+
+    '<span class="muted" style="font-size:12px">até</span>'+
+    '<input type="date" id="crAte" value="'+(p.ate||'')+'" style="max-width:150px;padding:6px 8px"/>'+
+    '<button class="btn ghost sm" style="padding:6px 12px" onclick="verCriativosCustom()">Aplicar</button>'+
+    '</div>'+
     '<div style="background:#141414;border:1px solid var(--linha);border-radius:12px;padding:12px 14px;margin:14px 0">'+
       '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'+
-        '<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.6px">Chegada de leads por dia</span>'+
+        '<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.6px">Chegada de leads por '+(porSemana?'semana':'dia')+'</span>'+
         '<span style="font-size:13px"><b style="color:var(--dourado)">'+totalPeriodo+'</b> <span class="muted">no período</span></span>'+
       '</div>'+
       '<div style="display:flex;align-items:flex-end;gap:2px;height:64px">'+barras+'</div>'+
-      '<div style="display:flex;justify-content:space-between;margin-top:5px" class="muted"><span style="font-size:11px">'+seq[0].rotulo+'</span><span style="font-size:11px">hoje</span></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:5px" class="muted"><span style="font-size:11px">'+(seq.length?seq[0].rotulo:'')+'</span><span style="font-size:11px">'+rotuloFim+'</span></div>'+
     '</div>'+
     '<p class="muted" style="margin:0 0 10px;font-size:12px">Oportunidade = lead qualificado pela Júria ou avançado no CRM. Digite o gasto do período de cada criativo pra ver CPL e CPO na hora.</p>';
   if(!GRUPOS_CRIATIVO.length){
@@ -376,7 +420,7 @@ async function renomearCriativo(i){
   try{
     await api('/admin/criativos/apelido',{method:'POST',body:JSON.stringify({chave:g.chave,apelido:novo})});
     APELIDOS_CRIATIVO=null; // recarrega do servidor
-    verCriativos(DIAS_CRIATIVO);
+    renderCriativos(); // mantém o período que estava selecionado
   }catch(e){alert('Não consegui salvar o apelido: '+e.message)}
 }
 function calcCriativo(i,gasto){

@@ -277,21 +277,32 @@ let LEADS_ADMIN=[];
 
 // ---- Relatório por criativo (CPL/CPO calculados ao digitar o gasto) ----
 let GRUPOS_CRIATIVO=[];
-function verCriativos(dias){
+let APELIDOS_CRIATIVO=null;
+let DIAS_CRIATIVO=30;
+async function verCriativos(dias){
   dias=Number(dias)||30;
+  DIAS_CRIATIVO=dias;
+  if(!APELIDOS_CRIATIVO){
+    try{APELIDOS_CRIATIVO=(await api('/admin/criativos/apelidos')).apelidos||{}}
+    catch(e){APELIDOS_CRIATIVO={}}
+  }
   const de=Date.now()-dias*86400000;
   const mapa={};
   LEADS_ADMIN.forEach(function(l){
     if(!l.created_at||new Date(l.created_at).getTime()<de)return;
-    const rotulo=l.criativo_titulo||l.criativo||(l.primeira_msg?('“'+String(l.primeira_msg).slice(0,60)+'”'):'(sem identificação)');
-    if(!mapa[rotulo])mapa[rotulo]={leads:0,ops:0,id:null};
-    if(!mapa[rotulo].id&&l.criativo&&l.criativo!==rotulo)mapa[rotulo].id=l.criativo;
-    mapa[rotulo].leads++;
+    const chave=l.criativo||l.criativo_titulo||(l.primeira_msg?('msg:'+String(l.primeira_msg).slice(0,60)):'(sem identificação)');
+    const original=l.criativo_titulo||l.criativo||(l.primeira_msg?('“'+String(l.primeira_msg).slice(0,60)+'”'):'(sem identificação)');
+    if(!mapa[chave])mapa[chave]={leads:0,ops:0,id:null,original:original};
+    if(!mapa[chave].id&&l.criativo)mapa[chave].id=l.criativo;
+    mapa[chave].leads++;
     const op=l.qualificado===true||['qualificado','reuniao','proposta','negociacao','fechado'].indexOf(l.etapa)>=0;
-    if(op)mapa[rotulo].ops++;
+    if(op)mapa[chave].ops++;
   });
-  GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){return {rotulo:k,leads:mapa[k].leads,ops:mapa[k].ops,id:mapa[k].id}})
-    .sort(function(a,b){return b.leads-a.leads});
+  GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){
+    const m=mapa[k];
+    return {chave:k,rotulo:APELIDOS_CRIATIVO[k]||m.original,original:m.original,
+      renomeado:!!APELIDOS_CRIATIVO[k],leads:m.leads,ops:m.ops,id:m.id};
+  }).sort(function(a,b){return b.leads-a.leads});
 
   // Chegadas por dia (todos os leads do período, no filtro de advogado atual)
   const porDia={};
@@ -338,8 +349,10 @@ function verCriativos(dias){
       '<div style="display:flex;gap:8px;align-items:baseline">'+
         '<span style="color:var(--dourado);font-weight:800;font-size:13px">#'+(i+1)+'</span>'+
         '<b style="font-size:13px;line-height:1.35">'+esc(g.rotulo)+'</b>'+
+        '<button class="btn ghost sm" style="margin-left:auto;padding:4px 9px;font-size:11px;white-space:nowrap" onclick="renomearCriativo('+i+')">✎ Renomear</button>'+
       '</div>'+
-      (g.id?'<div class="muted" style="font-size:11px;margin-top:3px">ID do anúncio no Meta: '+esc(g.id)+' <span style="opacity:.7">(cole na busca do Gerenciador pra achar o criativo)</span></div>':'')+
+      (g.renomeado&&g.original!==g.rotulo?'<div class="muted" style="font-size:11px;margin-top:3px">Anúncio: '+esc(g.original)+'</div>':'')+
+      (g.id&&g.id!==g.rotulo?'<div class="muted" style="font-size:11px;margin-top:3px">ID do anúncio no Meta: '+esc(g.id)+' <span style="opacity:.7">(cole na busca do Gerenciador pra achar o criativo)</span></div>':'')+
       '<div style="display:flex;gap:22px;margin:10px 0 6px">'+
         '<div><div style="font-size:20px;font-weight:800">'+g.leads+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Leads</div></div>'+
         '<div><div style="font-size:20px;font-weight:800">'+g.ops+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Oportunidades</div></div>'+
@@ -355,6 +368,16 @@ function verCriativos(dias){
       '</div></div>';
   });
   abrirModal(h);
+}
+async function renomearCriativo(i){
+  const g=GRUPOS_CRIATIVO[i]; if(!g)return;
+  const novo=prompt('Apelido do criativo (ex: AD 01 — vídeo no carro).\\nDeixe vazio pra voltar ao nome original:', g.renomeado?g.rotulo:'');
+  if(novo===null)return;
+  try{
+    await api('/admin/criativos/apelido',{method:'POST',body:JSON.stringify({chave:g.chave,apelido:novo})});
+    APELIDOS_CRIATIVO=null; // recarrega do servidor
+    verCriativos(DIAS_CRIATIVO);
+  }catch(e){alert('Não consegui salvar o apelido: '+e.message)}
 }
 function calcCriativo(i,gasto){
   const g=GRUPOS_CRIATIVO[i]; const v=Number(gasto);

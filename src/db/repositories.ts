@@ -345,6 +345,33 @@ export async function registrarAtribuicao(
   if (error) throw error;
 }
 
+// ---------- Apelidos de criativo (relatório "Desempenho dos anúncios") ----------
+
+/** Mapa chave -> apelido dado pelo gestor de tráfego. */
+export async function listApelidosCriativo(): Promise<Record<string, string>> {
+  const { data, error } = await db.from('criativo_apelidos').select('chave, apelido');
+  if (error) throw error;
+  const mapa: Record<string, string> = {};
+  (data ?? []).forEach((r: any) => (mapa[r.chave] = r.apelido));
+  return mapa;
+}
+
+/** Define/atualiza o apelido de um criativo; apelido vazio remove. */
+export async function setApelidoCriativo(chave: string, apelido: string): Promise<void> {
+  if (!apelido.trim()) {
+    const { error } = await db.from('criativo_apelidos').delete().eq('chave', chave);
+    if (error) throw error;
+    return;
+  }
+  const { error } = await db
+    .from('criativo_apelidos')
+    .upsert(
+      { chave, apelido: apelido.trim(), updated_at: new Date().toISOString() },
+      { onConflict: 'chave' },
+    );
+  if (error) throw error;
+}
+
 /** Avança a etapa do funil para "qualificado" (sem regredir etapas movidas pelo advogado). */
 export async function marcarEtapaQualificado(conversationId: string): Promise<void> {
   const { error } = await db

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant, listApelidosCriativo, setApelidoCriativo } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
@@ -176,6 +176,30 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { tenant_id } = req.query as { tenant_id?: string };
     const leads = await listLeads(tenant_id);
     return reply.send({ leads });
+  });
+
+  // Apelidos dos criativos (renomear no relatório de anúncios).
+  // Tolerante à migração pendente: sem a tabela, devolve mapa vazio.
+  app.get('/admin/criativos/apelidos', async (_req, reply) => {
+    try {
+      return reply.send({ apelidos: await listApelidosCriativo() });
+    } catch (err) {
+      logger.warn({ err }, 'Tabela criativo_apelidos indisponível (migração pendente?)');
+      return reply.send({ apelidos: {} });
+    }
+  });
+  app.post('/admin/criativos/apelido', async (req, reply) => {
+    const { chave, apelido } = (req.body ?? {}) as { chave?: string; apelido?: string };
+    if (!chave?.trim()) return reply.code(400).send({ error: 'chave é obrigatória' });
+    try {
+      await setApelidoCriativo(chave.trim(), apelido ?? '');
+      return reply.send({ ok: true });
+    } catch (err) {
+      logger.error({ err }, 'Falha ao salvar apelido do criativo');
+      return reply
+        .code(500)
+        .send({ error: 'não consegui salvar — a migração dos apelidos já foi rodada no Supabase?' });
+    }
   });
 
   // Resumo do CRM do escritório (acompanhamento da entrega pela agência)

@@ -181,6 +181,41 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
 .leadc.atrasada{border-color:rgba(255,107,94,.55)}
 .leadc.feita{opacity:.55}
 .resp{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;margin:5px 4px 0 0;background:rgba(109,179,242,.14);color:var(--azul)}
+/* ===== v1.3 — acabamento visual ===== */
+.btn{background:linear-gradient(180deg,#f2c65f,#d9a838);box-shadow:0 2px 10px rgba(232,184,75,.22);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.btn:hover{background:linear-gradient(180deg,#f6cd6e,#e0b044);transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,184,75,.3)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;box-shadow:none}
+.btn.ghost:hover{background:#1f1f1f;transform:translateY(-1px)}
+.card,.kpi{background:linear-gradient(180deg,#1c1a17,#171512);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 26px rgba(0,0,0,.32)}
+.kpi{position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,184,75,.55),transparent)}
+.col{background:linear-gradient(180deg,#161412,#131110);box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.leadc{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.leadc:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.4)}
+.leadc:active{cursor:grabbing}
+.col.drag{box-shadow:0 0 0 1px var(--dourado),0 0 22px rgba(232,184,75,.18)}
+aside button.mi{transition:background .15s ease,color .15s ease}
+.ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--dourado),#8a6a1f);color:#171717;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.rodape2{display:flex;gap:9px;align-items:center;margin-bottom:4px}
+.overlay{animation:ovIn .18s ease}
+.modal{animation:mdIn .22s cubic-bezier(.2,.9,.3,1.15);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+@keyframes mdIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.conteudo>div{animation:vwIn .24s ease}
+@keyframes vwIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.bar{transition:filter .15s ease}
+.bar:hover{filter:brightness(1.25)}
+tbody tr{transition:background .12s ease}
+.convitem{transition:background .12s ease}
+.vazio{display:flex;flex-direction:column;align-items:center;gap:7px;padding:44px 20px}
+.vazio svg{opacity:.45;color:var(--dourado)}
+.vazio b{color:var(--texto);font-size:14px}
+.skl{border-radius:12px;background:linear-gradient(90deg,#1a1815 25%,#242017 37%,#1a1815 63%);background-size:400% 100%;animation:sklA 1.2s ease infinite}
+@keyframes sklA{0%{background-position:100% 0}100%{background-position:0 0}}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:rgba(232,184,75,.6)}
+button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.conteudo>div,.modal,.overlay,.skl,.btn,.leadc{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -196,7 +231,7 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
     <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.2.0
+      Ambiente seguro · HENRIQUECER · v1.3.0
     </div>
   </div>
 </div>
@@ -211,7 +246,7 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
     <button class="mi" data-v="agenda" onclick="irPara('agenda')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="mi" data-v="demandas" onclick="irPara('demandas')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Demandas</button>
     <button class="mi" data-v="novidades" onclick="irPara('novidades')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Novidades<span id="novDot" class="novdot hidden"></span></button>
-    <div class="rodape"><b id="uNome"></b><span id="uEsc"></span><br/><button class="sair" onclick="sair()">Sair</button></div>
+    <div class="rodape"><div class="rodape2"><div class="ava" id="uAva">H</div><div><b id="uNome"></b><span id="uEsc"></span></div></div><button class="sair" onclick="sair()">Sair</button></div>
   </aside>
   <div class="conteudo">
     <div id="vw-painel"></div>
@@ -229,8 +264,14 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.2.0';
+var VERSAO='1.3.0';
 var NOVIDADES=[
+ {v:'1.3.0',data:'28/08/2026',titulo:'Visual repaginado',itens:[
+  'Acabamento novo em todo o sistema: profundidade, sombras e transições suaves',
+  'Cards do funil e das demandas respondem ao passar o mouse e ao arrastar',
+  'Números do painel animados e carregamento com efeito de esqueleto',
+  'Telas vazias redesenhadas, sempre indicando o próximo passo'
+ ]},
  {v:'1.2.0',data:'28/08/2026',titulo:'Demandas com prazos (Kanban)',itens:[
   'Nova aba Demandas: organize as tarefas do escritório em quadro Kanban (A fazer, Em andamento, Concluídas)',
   'Prazo em cada demanda — tarefas vencidas ficam em vermelho e sobem pro topo',
@@ -317,6 +358,8 @@ function iniciar(){
   document.getElementById('telaApp').classList.remove('hidden');
   document.getElementById('uNome').textContent=localStorage.getItem('crm_nome')||'';
   document.getElementById('uEsc').textContent=localStorage.getItem('crm_esc')||'';
+  var ava=(localStorage.getItem('crm_esc')||localStorage.getItem('crm_nome')||'H').trim();
+  document.getElementById('uAva').textContent=ava?ava.charAt(0).toUpperCase():'H';
   api('/api/crm/origens').then(function(d){ORIGENS=d.origens}).catch(function(){});
   atualizarNovDot();
   irPara('painel');
@@ -349,13 +392,31 @@ function renderNovidades(){
   el.innerHTML=h;
 }
 function carregarLeads(){return api('/api/crm/leads').then(function(d){LEADS=d.leads;return LEADS})}
+// esqueleto de carregamento (efeito shimmer)
+function skl(){return '<div class="skl" style="height:88px;margin-bottom:12px"></div><div class="skl" style="height:200px;margin-bottom:12px"></div><div class="skl" style="height:120px"></div>'}
+// estado vazio com ícone e próximo passo
+var SVGVZ='<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>';
+function vz(titulo,sub){return '<div class="vazio">'+SVGVZ+'<b>'+esc(titulo)+'</b>'+(sub?'<span class="mini" style="text-align:center;max-width:320px">'+esc(sub)+'</span>':'')+'</div>'}
+// números dos KPIs sobem animados
+function animarKpis(el){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  el.querySelectorAll('.kpi .n').forEach(function(n){
+    var m=String(n.textContent).match(/^(\\d+)(.*)$/);if(!m)return;
+    var alvo=Number(m[1]),suf=m[2]||'';if(!alvo)return;
+    var t0=null;
+    function passo(t){if(!t0)t0=t;var p=Math.min((t-t0)/550,1);
+      n.textContent=Math.round(alvo*(1-Math.pow(1-p,3)))+suf;
+      if(p<1)requestAnimationFrame(passo)}
+    requestAnimationFrame(passo);
+  });
+}
 function fecharModal(){document.getElementById('modal').innerHTML=''}
 function abrirModal(html){document.getElementById('modal').innerHTML='<div class="overlay" onclick="if(event.target===this)fecharModal()"><div class="modal">'+html+'</div></div>'}
 
 // =============== PAINEL ===============
 function renderPainel(dias){
   var el=document.getElementById('vw-painel');
-  el.innerHTML='<div class="vazio">Carregando…</div>';
+  el.innerHTML=skl();
   api('/api/crm/dashboard?dias='+dias).then(function(d){
     var k=d.kpis,h='';
     h+='<div class="row"><h2>Painel de controle</h2><select style="max-width:170px" onchange="renderPainel(this.value)">';
@@ -377,7 +438,7 @@ function renderPainel(dias){
     d.serie.forEach(function(s,i){
       var alt=Math.round(s.total/max*100);
       var lbl=(i%passo===0)?s.dia.slice(8,10)+'/'+s.dia.slice(5,7):'';
-      h+='<div class="bar" style="height:'+Math.max(alt,3)+'%"><span>'+(s.total||'')+'</span><i>'+lbl+'</i></div>'});
+      h+='<div class="bar" title="'+s.dia.slice(8,10)+'/'+s.dia.slice(5,7)+' — '+s.total+' lead(s)" style="height:'+Math.max(alt,3)+'%"><span>'+(s.total||'')+'</span><i>'+lbl+'</i></div>'});
     h+='</div></div>';
     h+='<div class="card"><h3>Próximas reuniões <small>· 7 dias</small></h3>';
     var reunioes=(d.reunioes_semana||[]).filter(function(e){return e.tipo!=='followup'});
@@ -401,6 +462,7 @@ function renderPainel(dias){
       h+='<div class="o"><b>'+Math.round(d.origens[o]/tot*100)+'%</b><small>'+esc(o)+'</small></div>'});
     h+='</div></div></div>';
     el.innerHTML=h;
+    animarKpis(el);
   }).catch(function(e){el.innerHTML='<div class="vazio">Erro: '+esc(e.message)+'</div>'});
 }
 
@@ -535,7 +597,7 @@ function renderLeads(){
   var lista=LEADS.filter(function(l){var c=l.conversations||{};
     return !q||String(l.nome||'').toLowerCase().includes(q)||String(l.area_juridica||'').toLowerCase().includes(q)||String(c.contato||'').includes(q)});
   h+='<div class="twrap"><table><thead><tr><th>Nome</th><th>Contato</th><th>Chegada</th><th>Origem</th><th>Área</th><th>Status</th><th>Atualizado</th></tr></thead><tbody>';
-  if(!lista.length)h+='<tr><td colspan="7" class="vazio">Nenhum lead ainda.</td></tr>';
+  if(!lista.length)h+='<tr><td colspan="7">'+vz('Nenhum lead por aqui ainda',q?'Nada encontrado com essa busca — tente outro termo.':'Os leads da Júria entram sozinhos; pra registrar um contato de indicação, use o botão + Novo.')+'</td></tr>';
   lista.forEach(function(l){var c=l.conversations||{};
     var chegada=l.created_at?new Date(l.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     h+='<tr onclick="abrirLead(\\''+l.id+'\\')"><td><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b></td><td>'+esc(c.contato||(l.dados&&l.dados.contato_manual)||'—')+'</td>'+
@@ -554,7 +616,7 @@ function renderConversas(){
   var comConversa=LEADS.filter(function(l){return l.conversation_id});
   var h='<div class="row"><h2>Conversas</h2><span class="mini">respostas manuais: pelo WhatsApp (a Júria pausa sozinha)</span></div>';
   h+='<div class="convgrid"><div class="convlist" id="clist">';
-  if(!comConversa.length)h+='<div class="vazio">Nenhuma conversa ainda.</div>';
+  if(!comConversa.length)h+=vz('Nenhuma conversa ainda','Quando a Júria atender um lead no WhatsApp, a conversa completa aparece aqui.');
   comConversa.forEach(function(l){var c=l.conversations||{};
     h+='<div class="convitem" data-id="'+l.id+'" onclick="abrirChat(\\''+l.id+'\\')"><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b>'+
        '<small>'+esc(l.area_juridica||'')+' · '+esc(c.status||'')+'</small></div>'});
@@ -714,7 +776,7 @@ var ST_DEM=[['a_fazer','A fazer'],['em_andamento','Em andamento'],['concluida','
 function stDemLabel(s){var f=ST_DEM.filter(function(x){return x[0]===s});return f.length?f[0][1]:s}
 function carregarDemandas(){
   var el=document.getElementById('vw-demandas');
-  el.innerHTML='<div class="vazio">Carregando…</div>';
+  el.innerHTML=skl();
   Promise.all([api('/api/crm/demandas'),LEADS.length?Promise.resolve({leads:LEADS}):api('/api/crm/leads')])
     .then(function(r){DEMANDAS=r[0].demandas||[];LEADS=r[1].leads||LEADS;renderDemandas()})
     .catch(function(e){el.innerHTML='<div class="vazio">Erro: '+esc(e.message)+'</div>'});
@@ -776,7 +838,7 @@ function renderDemandas(){
       if(ca!==cb)return ca-cb;
       return ordDemanda(a,b)});
     h+='<div class="twrap"><table><thead><tr><th>Demanda</th><th>Responsável</th><th>Lead</th><th>Prazo</th><th>Status</th></tr></thead><tbody>';
-    if(!lista.length)h+='<tr><td colspan="5" class="vazio">Nenhuma demanda ainda. Clique em "+ Nova demanda".</td></tr>';
+    if(!lista.length)h+='<tr><td colspan="5">'+vz('Nenhuma demanda ainda','Organize as tarefas do escritório aqui — clique em + Nova demanda pra começar.')+'</td></tr>';
     lista.forEach(function(d){
       var pi=przInfo(d);
       h+='<tr onclick="abrirDemanda(\\''+d.id+'\\')"><td><b>'+esc(d.titulo)+'</b>'+(d.descricao?'<div class="mini">'+esc(String(d.descricao).slice(0,90))+'</div>':'')+'</td>'+

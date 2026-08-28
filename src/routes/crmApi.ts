@@ -231,6 +231,75 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ ok: true });
   });
 
+  // ---------- Demandas (Kanban de tarefas com prazos) ----------
+  const STATUS_DEMANDA = ['a_fazer', 'em_andamento', 'concluida'];
+
+  app.get('/api/crm/demandas', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { data, error } = await db
+      .from('crm_demandas')
+      .select('*, leads(nome)')
+      .eq('tenant_id', u.tenant_id)
+      .order('prazo', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ demandas: data });
+  });
+
+  app.post('/api/crm/demandas', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const b = (req.body ?? {}) as any;
+    if (!b.titulo?.trim()) return reply.code(400).send({ error: 'título é obrigatório' });
+    const { data, error } = await db
+      .from('crm_demandas')
+      .insert({
+        tenant_id: u.tenant_id,
+        lead_id: b.lead_id || null,
+        titulo: b.titulo.trim(),
+        descricao: b.descricao ?? '',
+        responsavel: b.responsavel ?? '',
+        prazo: b.prazo || null,
+        status: STATUS_DEMANDA.includes(b.status) ? b.status : 'a_fazer',
+      })
+      .select('*')
+      .single();
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ demanda: data });
+  });
+
+  app.patch('/api/crm/demandas/:id', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { id } = req.params as { id: string };
+    const b = (req.body ?? {}) as any;
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (b.status !== undefined) {
+      if (!STATUS_DEMANDA.includes(b.status)) return reply.code(400).send({ error: 'status inválido' });
+      patch.status = b.status;
+      patch.concluida_em = b.status === 'concluida' ? new Date().toISOString() : null;
+    }
+    for (const c of ['titulo', 'descricao', 'responsavel', 'lead_id'] as const) {
+      if (b[c] !== undefined) patch[c] = b[c] || null;
+    }
+    if (b.titulo !== undefined && !String(b.titulo).trim()) delete patch.titulo;
+    if (b.prazo !== undefined) patch.prazo = b.prazo || null;
+    const { error } = await db.from('crm_demandas').update(patch).eq('id', id).eq('tenant_id', u.tenant_id);
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ ok: true });
+  });
+
+  app.delete('/api/crm/demandas/:id', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { id } = req.params as { id: string };
+    const { error } = await db.from('crm_demandas').delete().eq('id', id).eq('tenant_id', u.tenant_id);
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ ok: true });
+  });
+
   // ---------- Fechamentos (honorários) ----------
   app.post('/api/crm/fechamentos', async (req, reply) => {
     const u = await auth(req, reply);

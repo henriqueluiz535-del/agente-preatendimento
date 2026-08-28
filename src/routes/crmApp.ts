@@ -174,6 +174,13 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
 .evm.nc,.ev.nc{background:rgba(255,107,94,.13);color:var(--erro);text-decoration:line-through}
 .ev.nc{border-left-color:var(--erro)}
 .dotleg{width:9px;height:9px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px}
+/* demandas */
+.prz{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:6px;background:#242424;color:var(--muted)}
+.prz.hj{background:rgba(232,184,75,.16);color:var(--dourado)}
+.prz.atr{background:rgba(255,107,94,.16);color:var(--erro)}
+.leadc.atrasada{border-color:rgba(255,107,94,.55)}
+.leadc.feita{opacity:.55}
+.resp{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;margin:5px 4px 0 0;background:rgba(109,179,242,.14);color:var(--azul)}
 </style>
 </head>
 <body>
@@ -189,7 +196,7 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
     <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.1.0
+      Ambiente seguro · HENRIQUECER · v1.2.0
     </div>
   </div>
 </div>
@@ -202,6 +209,7 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
     <button class="mi" data-v="leads" onclick="irPara('leads')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads</button>
     <button class="mi" data-v="conversas" onclick="irPara('conversas')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Conversas</button>
     <button class="mi" data-v="agenda" onclick="irPara('agenda')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
+    <button class="mi" data-v="demandas" onclick="irPara('demandas')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Demandas</button>
     <button class="mi" data-v="novidades" onclick="irPara('novidades')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Novidades<span id="novDot" class="novdot hidden"></span></button>
     <div class="rodape"><b id="uNome"></b><span id="uEsc"></span><br/><button class="sair" onclick="sair()">Sair</button></div>
   </aside>
@@ -211,6 +219,7 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
     <div id="vw-leads" class="hidden"></div>
     <div id="vw-conversas" class="hidden"></div>
     <div id="vw-agenda" class="hidden"></div>
+    <div id="vw-demandas" class="hidden"></div>
     <div id="vw-novidades" class="hidden"></div>
   </div>
 </div>
@@ -220,8 +229,16 @@ aside button.mi svg{flex-shrink:0;opacity:.9}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.1.0';
+var VERSAO='1.2.0';
 var NOVIDADES=[
+ {v:'1.2.0',data:'28/08/2026',titulo:'Demandas com prazos (Kanban)',itens:[
+  'Nova aba Demandas: organize as tarefas do escritório em quadro Kanban (A fazer, Em andamento, Concluídas)',
+  'Prazo em cada demanda — tarefas vencidas ficam em vermelho e sobem pro topo',
+  'Responsável por demanda, pra dividir o trabalho da equipe',
+  'Vínculo opcional com um lead (ex: "enviar contrato pro João")',
+  'Visão em lista, além do quadro',
+  'No painel da agência: relatório de desempenho dos anúncios e cadastro de cliente Somente CRM'
+ ]},
  {v:'1.1.0',data:'18/07/2026',titulo:'Visual profissional e mais controle',itens:[
   'Ícones novos na navegação, com visual mais profissional',
   'Agenda com filtro por status: pendentes, realizadas e não compareceu',
@@ -310,12 +327,13 @@ function atualizarNovDot(){
 }
 function irPara(v){
   document.querySelectorAll('aside .mi').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
-  ['painel','funil','leads','conversas','agenda','novidades'].forEach(function(x){document.getElementById('vw-'+x).classList.toggle('hidden',x!==v)});
+  ['painel','funil','leads','conversas','agenda','demandas','novidades'].forEach(function(x){document.getElementById('vw-'+x).classList.toggle('hidden',x!==v)});
   if(v==='painel')renderPainel(7);
   if(v==='funil')carregarLeads().then(renderFunil);
   if(v==='leads')carregarLeads().then(renderLeads);
   if(v==='conversas')carregarLeads().then(renderConversas);
   if(v==='agenda')renderAgenda();
+  if(v==='demandas')carregarDemandas();
   if(v==='novidades')renderNovidades();
 }
 function renderNovidades(){
@@ -688,6 +706,152 @@ function marcarEvento(id,s){
 function excluirEvento(id){
   if(!confirm('Excluir este compromisso?'))return;
   api('/api/crm/eventos/'+id,{method:'DELETE'}).then(function(){fecharModal();renderAgenda()}).catch(function(e){alert(e.message)});
+}
+
+// =============== DEMANDAS ===============
+var DEMANDAS=[]; var DM={modo:'quadro'};
+var ST_DEM=[['a_fazer','A fazer'],['em_andamento','Em andamento'],['concluida','Concluídas']];
+function stDemLabel(s){var f=ST_DEM.filter(function(x){return x[0]===s});return f.length?f[0][1]:s}
+function carregarDemandas(){
+  var el=document.getElementById('vw-demandas');
+  el.innerHTML='<div class="vazio">Carregando…</div>';
+  Promise.all([api('/api/crm/demandas'),LEADS.length?Promise.resolve({leads:LEADS}):api('/api/crm/leads')])
+    .then(function(r){DEMANDAS=r[0].demandas||[];LEADS=r[1].leads||LEADS;renderDemandas()})
+    .catch(function(e){el.innerHTML='<div class="vazio">Erro: '+esc(e.message)+'</div>'});
+}
+function przInfo(d){
+  if(!d.prazo)return null;
+  var hoje=new Date();hoje.setHours(0,0,0,0);
+  var p=new Date(String(d.prazo).slice(0,10)+'T12:00:00');p.setHours(0,0,0,0);
+  var diff=Math.round((p-hoje)/86400000);
+  var rot=p.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  if(d.status==='concluida')return {cls:'',txt:rot};
+  if(diff<0)return {cls:' atr',txt:rot+' · atrasada'};
+  if(diff===0)return {cls:' hj',txt:'vence hoje'};
+  if(diff===1)return {cls:' hj',txt:'vence amanhã'};
+  return {cls:'',txt:rot};
+}
+function ordDemanda(a,b){
+  var pa=a.prazo?String(a.prazo).slice(0,10):'9999-12-31';
+  var pb=b.prazo?String(b.prazo).slice(0,10):'9999-12-31';
+  return pa<pb?-1:(pa>pb?1:0);
+}
+function cardDemanda(d){
+  var pi=przInfo(d);
+  var atras=pi&&pi.cls===' atr';
+  var h='<div class="leadc'+(atras?' atrasada':'')+(d.status==='concluida'?' feita':'')+'" draggable="true" ondragstart="event.dataTransfer.setData(\\'text\\','+JSON.stringify(d.id).replace(/"/g,'&quot;')+')" onclick="abrirDemanda(\\''+d.id+'\\')">';
+  h+='<b>'+esc(d.titulo)+'</b>';
+  var tags='';
+  if(d.responsavel)tags+='<span class="resp">'+esc(d.responsavel)+'</span>';
+  if(d.leads&&d.leads.nome)tags+='<span class="a">'+esc(d.leads.nome)+'</span>';
+  if(tags)h+='<br/>'+tags;
+  if(pi)h+='<br/><span class="prz'+pi.cls+'">'+esc(pi.txt)+'</span>';
+  if(d.descricao)h+='<div class="m">'+esc(String(d.descricao).slice(0,80))+'</div>';
+  return h+'</div>';
+}
+function renderDemandas(){
+  var el=document.getElementById('vw-demandas'),h='';
+  var atrasadas=DEMANDAS.filter(function(d){var p=przInfo(d);return p&&p.cls===' atr'}).length;
+  var pend=DEMANDAS.filter(function(d){return d.status!=='concluida'}).length;
+  h+='<div class="row"><h2>Demandas</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
+     '<div class="vsw"><button class="'+(DM.modo==='quadro'?'on':'')+'" onclick="DM.modo=\\'quadro\\';renderDemandas()">Quadro</button>'+
+     '<button class="'+(DM.modo==='lista'?'on':'')+'" onclick="DM.modo=\\'lista\\';renderDemandas()">Lista</button></div>'+
+     '<button class="btn" onclick="modalNovaDemanda()">+ Nova demanda</button></div></div>';
+  h+='<div class="row" style="margin-top:-6px"><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+     '<span class="chip">'+pend+' pendente(s)</span>'+
+     (atrasadas?'<span class="chip" style="border-color:rgba(255,107,94,.5);color:var(--erro)">'+atrasadas+' atrasada(s)</span>':'')+
+     '</div></div>';
+  if(DM.modo==='quadro'){
+    h+='<div class="kb">';
+    ST_DEM.forEach(function(st){
+      var lista=DEMANDAS.filter(function(d){return (d.status||'a_fazer')===st[0]}).sort(ordDemanda);
+      h+='<div class="col" style="min-width:250px;flex:1" data-st="'+st[0]+'" ondragover="event.preventDefault();this.classList.add(\\'drag\\')" ondragleave="this.classList.remove(\\'drag\\')" ondrop="soltarDemanda(event,this)">';
+      h+='<h4><b>'+st[1]+'</b><span class="ct">'+lista.length+'</span></h4>';
+      lista.forEach(function(d){h+=cardDemanda(d)});
+      h+='</div>'});
+    h+='</div><p class="mini">Arraste as demandas entre as colunas. Vencidas ficam em vermelho e no topo. Clique numa demanda para editar.</p>';
+  }else{
+    var lista=DEMANDAS.slice().sort(function(a,b){
+      var ca=a.status==='concluida'?1:0, cb=b.status==='concluida'?1:0;
+      if(ca!==cb)return ca-cb;
+      return ordDemanda(a,b)});
+    h+='<div class="twrap"><table><thead><tr><th>Demanda</th><th>Responsável</th><th>Lead</th><th>Prazo</th><th>Status</th></tr></thead><tbody>';
+    if(!lista.length)h+='<tr><td colspan="5" class="vazio">Nenhuma demanda ainda. Clique em "+ Nova demanda".</td></tr>';
+    lista.forEach(function(d){
+      var pi=przInfo(d);
+      h+='<tr onclick="abrirDemanda(\\''+d.id+'\\')"><td><b>'+esc(d.titulo)+'</b>'+(d.descricao?'<div class="mini">'+esc(String(d.descricao).slice(0,90))+'</div>':'')+'</td>'+
+         '<td>'+esc(d.responsavel||'—')+'</td><td>'+esc((d.leads&&d.leads.nome)||'—')+'</td>'+
+         '<td>'+(pi?'<span class="prz'+pi.cls+'" style="margin-top:0">'+esc(pi.txt)+'</span>':'—')+'</td>'+
+         '<td><span class="st'+(d.status==='concluida'?' fechado':(d.status==='em_andamento'?' reuniao':''))+'">'+stDemLabel(d.status)+'</span></td></tr>'});
+    h+='</tbody></table></div>';
+  }
+  el.innerHTML=h;
+}
+function soltarDemanda(ev,colEl){
+  ev.preventDefault();colEl.classList.remove('drag');
+  var id=ev.dataTransfer.getData('text');var st=colEl.dataset.st;
+  var d=DEMANDAS.find(function(x){return x.id===id});
+  if(!d||d.status===st)return;
+  api('/api/crm/demandas/'+id,{method:'PATCH',body:JSON.stringify({status:st})})
+    .then(function(){d.status=st;renderDemandas()})
+    .catch(function(e){alert('Erro: '+e.message)});
+}
+function modalNovaDemanda(){
+  var opts='<option value="">— sem vínculo —</option>'+LEADS.map(function(l){
+    return '<option value="'+l.id+'">'+esc(l.nome||'(sem nome)')+'</option>'}).join('');
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Nova demanda</h3>'+
+  '<label>O que precisa ser feito? *</label><input id="d_tit" placeholder="Ex: protocolar petição do João"/>'+
+  '<label>Detalhes (opcional)</label><textarea id="d_desc" rows="2"></textarea>'+
+  '<div class="duo"><div><label>Responsável</label><input id="d_resp" placeholder="Ex: Dra. Ana"/></div>'+
+  '<div><label>Prazo</label><input id="d_prazo" type="date"/></div></div>'+
+  '<label>Lead vinculado (opcional)</label><select id="d_lead">'+opts+'</select>'+
+  '<div class="erroMsg" id="d_erro"></div>'+
+  '<button class="btn" style="width:100%;margin-top:12px" onclick="salvarNovaDemanda()">Criar demanda</button>';
+  abrirModal(h);
+}
+function salvarNovaDemanda(){
+  var body={titulo:document.getElementById('d_tit').value.trim(),descricao:document.getElementById('d_desc').value.trim(),
+    responsavel:document.getElementById('d_resp').value.trim(),prazo:document.getElementById('d_prazo').value||null,
+    lead_id:document.getElementById('d_lead').value||null};
+  if(!body.titulo){document.getElementById('d_erro').textContent='Descreva a demanda.';return}
+  api('/api/crm/demandas',{method:'POST',body:JSON.stringify(body)})
+    .then(function(){fecharModal();carregarDemandas()})
+    .catch(function(e){document.getElementById('d_erro').textContent='Erro: '+e.message});
+}
+function abrirDemanda(id){
+  var d=DEMANDAS.find(function(x){return x.id===id});if(!d)return;
+  var opts='<option value="">— sem vínculo —</option>'+LEADS.map(function(l){
+    return '<option value="'+l.id+'"'+(l.id===d.lead_id?' selected':'')+'>'+esc(l.nome||'(sem nome)')+'</option>'}).join('');
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Demanda</h3>'+
+  '<label>Título</label><input id="d_tit" value="'+esc(d.titulo)+'"/>'+
+  '<label>Detalhes</label><textarea id="d_desc" rows="2">'+esc(d.descricao||'')+'</textarea>'+
+  '<div class="duo"><div><label>Responsável</label><input id="d_resp" value="'+esc(d.responsavel||'')+'"/></div>'+
+  '<div><label>Prazo</label><input id="d_prazo" type="date" value="'+esc(d.prazo?String(d.prazo).slice(0,10):'')+'"/></div></div>'+
+  '<label>Lead vinculado</label><select id="d_lead">'+opts+'</select>'+
+  '<div class="erroMsg" id="d_erro"></div>'+
+  '<div class="duo" style="margin-top:12px"><button class="btn sm" onclick="salvarDemanda(\\''+d.id+'\\')">Salvar</button>'+
+  (d.status==='a_fazer'?'<button class="btn ghost sm" onclick="moverDemanda(\\''+d.id+'\\',\\'em_andamento\\')">Iniciar</button>':'')+
+  (d.status!=='concluida'?'<button class="btn ghost sm" style="color:var(--ok);border-color:rgba(62,207,142,.5)" onclick="moverDemanda(\\''+d.id+'\\',\\'concluida\\')">✓ Concluir</button>':
+    '<button class="btn ghost sm" onclick="moverDemanda(\\''+d.id+'\\',\\'a_fazer\\')">Reabrir</button>')+
+  '<button class="btn ghost sm" style="color:var(--erro);border-color:var(--erro)" onclick="excluirDemanda(\\''+d.id+'\\')">Excluir</button></div>';
+  abrirModal(h);
+}
+function salvarDemanda(id){
+  var body={titulo:document.getElementById('d_tit').value.trim(),descricao:document.getElementById('d_desc').value.trim(),
+    responsavel:document.getElementById('d_resp').value.trim(),prazo:document.getElementById('d_prazo').value||null,
+    lead_id:document.getElementById('d_lead').value||null};
+  api('/api/crm/demandas/'+id,{method:'PATCH',body:JSON.stringify(body)})
+    .then(function(){fecharModal();carregarDemandas()})
+    .catch(function(e){document.getElementById('d_erro').textContent='Erro: '+e.message});
+}
+function moverDemanda(id,st){
+  api('/api/crm/demandas/'+id,{method:'PATCH',body:JSON.stringify({status:st})})
+    .then(function(){fecharModal();carregarDemandas()})
+    .catch(function(e){alert('Erro: '+e.message)});
+}
+function excluirDemanda(id){
+  if(!confirm('Excluir esta demanda?'))return;
+  api('/api/crm/demandas/'+id,{method:'DELETE'}).then(function(){fecharModal();carregarDemandas()}).catch(function(e){alert(e.message)});
 }
 
 // boot

@@ -212,6 +212,54 @@ tbody tr{transition:background .12s ease}
 .vazio svg{opacity:.45;color:var(--dourado)}
 .vazio b{color:var(--texto);font-size:14px}
 .skl{border-radius:12px;background:linear-gradient(90deg,#1a1815 25%,#242017 37%,#1a1815 63%);background-size:400% 100%;animation:sklA 1.2s ease infinite}
+/* perfil na sidebar (v1.4) */
+.perfilbt{display:flex;gap:10px;align-items:center;background:none;border:none;color:inherit;font:inherit;padding:6px;margin:-6px -6px 2px;cursor:pointer;text-align:left;border-radius:10px;width:calc(100% + 12px)}
+.perfilbt:hover{background:#151515}
+.avaW{position:relative;flex-shrink:0}
+.ava{width:38px;height:38px;font-size:16px;background-size:cover;background-position:center}
+.dotON{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2.5px solid var(--preto)}
+.cargo{display:block;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-top:2px}
+#pf_prev{width:84px;height:84px;font-size:34px;margin:10px auto}
+/* comentários (v1.4) */
+.cmt{border-top:1px solid var(--linha);padding:9px 0;font-size:13px}
+.cmt:first-child{border-top:none}
+.cmt b{color:var(--dourado);font-size:12px}
+.cmt small{color:var(--muted);font-size:10.5px;margin-left:7px}
+.cmt p{margin:3px 0 0;white-space:pre-wrap}
+.cmtform{display:flex;gap:8px;margin-top:8px}
+.cmtform input{flex:1}
+.recb{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;margin:5px 4px 0 0;background:rgba(181,140,230,.16);color:var(--roxo)}
+/* ===== tema claro (v1.4) ===== */
+.temabt{position:fixed;top:12px;right:14px;z-index:45;width:36px;height:36px;border-radius:50%;border:1px solid var(--linha);
+  background:var(--card);color:var(--dourado);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);transition:transform .15s ease}
+.temabt:hover{transform:translateY(-1px)}
+.conteudo>div>.row:first-child{padding-right:46px}
+body.claro{--bg:#f2efe8;--preto:#ffffff;--card:#ffffff;--card2:#f6f3ec;--dourado:#a87d1c;--dourado2:#8f6a15;
+  --texto:#241f16;--muted:#847c6d;--linha:#e2dccd;--ok:#1e9e63;--erro:#d64536;--azul:#2f77c4;--roxo:#7c4fc4;color-scheme:light}
+body.claro .login{background:radial-gradient(circle at 50% 30%,#ffffff,#e9e4d8)}
+body.claro aside{border-right-color:var(--linha)}
+body.claro aside button.mi:hover{background:#f2eee5}
+body.claro aside button.mi.on{background:rgba(168,125,28,.12)}
+body.claro .perfilbt:hover{background:#f2eee5}
+body.claro .btn{background:linear-gradient(180deg,#e5b64a,#c99a2b);color:#241f16;box-shadow:0 2px 10px rgba(168,125,28,.25)}
+body.claro .btn:hover{background:linear-gradient(180deg,#eabf58,#d2a334)}
+body.claro .btn.ghost{background:transparent;box-shadow:none}
+body.claro .btn.ghost:hover{background:#f2eee5}
+body.claro .card,body.claro .kpi{background:linear-gradient(180deg,#ffffff,#fbf8f1);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 10px 24px rgba(70,55,20,.08)}
+body.claro .col{background:linear-gradient(180deg,#f3f0e8,#eeeade);box-shadow:0 8px 18px rgba(70,55,20,.07)}
+body.claro .leadc{box-shadow:0 2px 8px rgba(70,55,20,.08)}
+body.claro .leadc:hover{box-shadow:0 8px 18px rgba(70,55,20,.15)}
+body.claro .mdia.fds,body.claro .dia7.fds{background:#eeeade}
+body.claro .balao.lead{background:#ece8dd}
+body.claro .st{background:#e8e3d5;color:#6b6455}
+body.claro tbody tr:hover{background:#f6f2e8}
+body.claro .convitem:hover,body.claro .convitem.on{background:#f6f2e8}
+body.claro .skl{background:linear-gradient(90deg,#ece7da 25%,#f7f3e9 37%,#ece7da 63%);background-size:400% 100%}
+body.claro .modal{box-shadow:0 24px 60px rgba(50,38,12,.28)}
+body.claro .prz{background:#e8e3d5}
+body.claro .meet .dt,body.claro .hono .h,body.claro .orig .o{background:#f6f3ec}
+body.claro .temabt{box-shadow:0 4px 14px rgba(70,55,20,.15)}
 @keyframes sklA{0%{background-position:100% 0}100%{background-position:0 0}}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:rgba(232,184,75,.6)}
 button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
@@ -219,6 +267,8 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
 </style>
 </head>
 <body>
+
+<button class="temabt" id="temaBt" onclick="alternarTema()" title="Alternar entre visual escuro e claro" aria-label="Alternar tema"></button>
 
 <div id="telaLogin" class="login">
   <div class="box">
@@ -231,7 +281,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.3.0
+      Ambiente seguro · HENRIQUECER · v1.4.0
     </div>
   </div>
 </div>
@@ -246,7 +296,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <button class="mi" data-v="agenda" onclick="irPara('agenda')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
     <button class="mi" data-v="demandas" onclick="irPara('demandas')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Demandas</button>
     <button class="mi" data-v="novidades" onclick="irPara('novidades')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Novidades<span id="novDot" class="novdot hidden"></span></button>
-    <div class="rodape"><div class="rodape2"><div class="ava" id="uAva">H</div><div><b id="uNome"></b><span id="uEsc"></span></div></div><button class="sair" onclick="sair()">Sair</button></div>
+    <div class="rodape"><button class="perfilbt" onclick="modalPerfil()" title="Editar perfil"><span class="avaW"><span class="ava" id="uAva">H</span><i class="dotON"></i></span><span><b id="uNome"></b><span id="uEsc" class="cargo"></span></span></button><button class="sair" onclick="sair()">Sair</button></div>
   </aside>
   <div class="conteudo">
     <div id="vw-painel"></div>
@@ -264,8 +314,13 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.3.0';
+var VERSAO='1.4.0';
 var NOVIDADES=[
+ {v:'1.4.0',data:'28/08/2026',titulo:'Equipe trabalhando junta',itens:[
+  'Comentários dentro das demandas e dos leads — a equipe conversa no próprio card e o histórico fica guardado',
+  'Demandas recorrentes: marque "toda semana" ou "todo mês" e, ao concluir, a próxima é criada sozinha',
+  'Foto de perfil: clique no seu nome na barra lateral pra colocar sua foto ou a logo do escritório'
+ ]},
  {v:'1.3.0',data:'28/08/2026',titulo:'Visual repaginado',itens:[
   'Acabamento novo em todo o sistema: profundidade, sombras e transições suaves',
   'Cards do funil e das demandas respondem ao passar o mouse e ao arrastar',
@@ -356,10 +411,12 @@ function fazerCadastro(){
 function iniciar(){
   document.getElementById('telaLogin').classList.add('hidden');
   document.getElementById('telaApp').classList.remove('hidden');
-  document.getElementById('uNome').textContent=localStorage.getItem('crm_nome')||'';
-  document.getElementById('uEsc').textContent=localStorage.getItem('crm_esc')||'';
-  var ava=(localStorage.getItem('crm_esc')||localStorage.getItem('crm_nome')||'H').trim();
-  document.getElementById('uAva').textContent=ava?ava.charAt(0).toUpperCase():'H';
+  pintarPerfil();
+  api('/api/crm/perfil').then(function(p){
+    if(p.nome)localStorage.setItem('crm_nome',p.nome);
+    if(p.foto)localStorage.setItem('crm_foto',p.foto); else localStorage.removeItem('crm_foto');
+    pintarPerfil();
+  }).catch(function(){});
   api('/api/crm/origens').then(function(d){ORIGENS=d.origens}).catch(function(){});
   atualizarNovDot();
   irPara('painel');
@@ -367,6 +424,99 @@ function iniciar(){
 function atualizarNovDot(){
   var d=document.getElementById('novDot');
   if(d)d.classList.toggle('hidden',localStorage.getItem('crm_nov_visto')===VERSAO);
+}
+// ---------- tema claro/escuro ----------
+var SVGSOL='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+var SVGLUA='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function aplicarTema(){
+  var claro=(localStorage.getItem('crm_tema')||'escuro')==='claro';
+  document.body.classList.toggle('claro',claro);
+  var b=document.getElementById('temaBt');
+  if(b)b.innerHTML=claro?SVGLUA:SVGSOL; // mostra o tema pra onde o clique leva
+}
+function alternarTema(){
+  var claro=(localStorage.getItem('crm_tema')||'escuro')==='claro';
+  localStorage.setItem('crm_tema',claro?'escuro':'claro');
+  aplicarTema();
+}
+aplicarTema();
+// ---------- perfil (foto + nome) ----------
+var FOTO_TMP=null;
+function pintarAvatar(el,foto,inicial){
+  if(!el)return;
+  if(foto){el.style.backgroundImage='url('+foto+')';el.textContent=''}
+  else{el.style.backgroundImage='';el.textContent=(inicial||'H').charAt(0).toUpperCase()}
+}
+function pintarPerfil(){
+  document.getElementById('uNome').textContent=localStorage.getItem('crm_nome')||'';
+  document.getElementById('uEsc').textContent=localStorage.getItem('crm_esc')||'';
+  var ini=(localStorage.getItem('crm_esc')||localStorage.getItem('crm_nome')||'H').trim();
+  pintarAvatar(document.getElementById('uAva'),localStorage.getItem('crm_foto'),ini);
+}
+function modalPerfil(){
+  FOTO_TMP=null;
+  var ini=(localStorage.getItem('crm_esc')||localStorage.getItem('crm_nome')||'H').trim();
+  var h='<button class="fechar" onclick="fecharModal()">×</button><h3>Meu perfil</h3>'+
+  '<div class="ava" id="pf_prev"></div>'+
+  '<label style="text-align:center;cursor:pointer;color:var(--dourado);display:block">Trocar foto (sua foto ou a logo do escritório)'+
+  '<input type="file" accept="image/*" style="display:none" onchange="trocarFoto(event)"/></label>'+
+  '<label>Seu nome</label><input id="pf_nome" value="'+esc(localStorage.getItem('crm_nome')||'')+'"/>'+
+  '<div class="erroMsg" id="pf_erro"></div>'+
+  '<div class="duo" style="margin-top:12px"><button class="btn" onclick="salvarPerfil()">Salvar</button>'+
+  '<button class="btn ghost sm" onclick="FOTO_TMP=\\'\\';pintarAvatar(document.getElementById(\\'pf_prev\\'),null,\\''+esc(ini.charAt(0))+'\\')">Remover foto</button></div>';
+  abrirModal(h);
+  pintarAvatar(document.getElementById('pf_prev'),localStorage.getItem('crm_foto'),ini);
+}
+function trocarFoto(ev){
+  var f=ev.target.files&&ev.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var c=document.createElement('canvas');c.width=128;c.height=128;
+      var s=Math.min(img.width,img.height);
+      c.getContext('2d').drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,128,128);
+      FOTO_TMP=c.toDataURL('image/jpeg',.85);
+      pintarAvatar(document.getElementById('pf_prev'),FOTO_TMP,null);
+    };
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(f);
+}
+function salvarPerfil(){
+  var body={nome:document.getElementById('pf_nome').value.trim()};
+  if(FOTO_TMP!==null)body.foto=FOTO_TMP||null;
+  api('/api/crm/perfil',{method:'PATCH',body:JSON.stringify(body)}).then(function(){
+    if(body.nome)localStorage.setItem('crm_nome',body.nome);
+    if(FOTO_TMP===''){localStorage.removeItem('crm_foto')}
+    else if(FOTO_TMP)localStorage.setItem('crm_foto',FOTO_TMP);
+    pintarPerfil();fecharModal();
+  }).catch(function(e){document.getElementById('pf_erro').textContent='Erro: '+e.message});
+}
+// ---------- comentários (demandas e leads) ----------
+function cmtHtml(alvo,id){
+  return '<h3 style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:16px 0 4px">Comentários da equipe</h3>'+
+    '<div id="cmtLista" class="mini">Carregando…</div>'+
+    '<div class="cmtform"><input id="cmtTxt" placeholder="Escreva um comentário… (ex: Ana, faltou o laudo)" onkeydown="if(event.key===\\'Enter\\')enviarComentario(\\''+alvo+'\\',\\''+id+'\\')"/>'+
+    '<button class="btn sm" onclick="enviarComentario(\\''+alvo+'\\',\\''+id+'\\')">Enviar</button></div>';
+}
+function carregarComentarios(alvo,id){
+  api('/api/crm/comentarios?'+alvo+'_id='+id).then(function(d){
+    var box=document.getElementById('cmtLista');if(!box)return;
+    if(!d.comentarios.length){box.innerHTML='<i>Nenhum comentário ainda — o histórico da equipe fica aqui.</i>';return}
+    box.innerHTML=d.comentarios.map(function(c){
+      var q=new Date(c.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return '<div class="cmt"><b>'+esc(c.autor||'—')+'</b><small>'+q+'</small><p>'+esc(c.texto)+'</p></div>'}).join('');
+  }).catch(function(e){var box=document.getElementById('cmtLista');if(box)box.innerHTML='<i>'+esc(e.message)+'</i>'});
+}
+function enviarComentario(alvo,id){
+  var inp=document.getElementById('cmtTxt');
+  var t=(inp.value||'').trim();if(!t)return;
+  var body={texto:t};body[alvo+'_id']=id;
+  inp.value='';
+  api('/api/crm/comentarios',{method:'POST',body:JSON.stringify(body)})
+    .then(function(){carregarComentarios(alvo,id)})
+    .catch(function(e){alert('Erro: '+e.message)});
 }
 function irPara(v){
   document.querySelectorAll('aside .mi').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
@@ -507,8 +657,10 @@ function abrirLead(id){
   h+='<label>Observações (contexto pra reunião, detalhes do caso…)</label><textarea id="nts" rows="3">'+esc(l.notas||'')+'</textarea>';
   h+='<div class="duo" style="margin-top:10px"><button class="btn sm" onclick="salvarNotas(\\''+l.id+'\\')">Salvar observações</button>'+
      '<button class="btn ghost sm" onclick="modalAgendar(\\''+l.id+'\\')">Agendar</button></div>';
+  h+=cmtHtml('lead',l.id);
   h+='<div id="convBox" style="margin-top:14px" class="mini">Carregando conversa…</div>';
   abrirModal(h);
+  carregarComentarios('lead',l.id);
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
     var box=document.getElementById('convBox');if(!box)return;
     if(!d.mensagens.length){box.innerHTML='<i>Sem conversa registrada (lead manual).</i>';return}
@@ -808,6 +960,7 @@ function cardDemanda(d){
   if(d.leads&&d.leads.nome)tags+='<span class="a">'+esc(d.leads.nome)+'</span>';
   if(tags)h+='<br/>'+tags;
   if(pi)h+='<br/><span class="prz'+pi.cls+'">'+esc(pi.txt)+'</span>';
+  if(d.recorrencia)h+=(pi?'':'<br/>')+'<span class="recb">↻ '+(d.recorrencia==='semanal'?'toda semana':'todo mês')+'</span>';
   if(d.descricao)h+='<div class="m">'+esc(String(d.descricao).slice(0,80))+'</div>';
   return h+'</div>';
 }
@@ -866,6 +1019,7 @@ function modalNovaDemanda(){
   '<label>Detalhes (opcional)</label><textarea id="d_desc" rows="2"></textarea>'+
   '<div class="duo"><div><label>Responsável</label><input id="d_resp" placeholder="Ex: Dra. Ana"/></div>'+
   '<div><label>Prazo</label><input id="d_prazo" type="date"/></div></div>'+
+  '<label>Repetir</label><select id="d_rec"><option value="">Não repete</option><option value="semanal">Toda semana</option><option value="mensal">Todo mês</option></select>'+
   '<label>Lead vinculado (opcional)</label><select id="d_lead">'+opts+'</select>'+
   '<div class="erroMsg" id="d_erro"></div>'+
   '<button class="btn" style="width:100%;margin-top:12px" onclick="salvarNovaDemanda()">Criar demanda</button>';
@@ -874,6 +1028,7 @@ function modalNovaDemanda(){
 function salvarNovaDemanda(){
   var body={titulo:document.getElementById('d_tit').value.trim(),descricao:document.getElementById('d_desc').value.trim(),
     responsavel:document.getElementById('d_resp').value.trim(),prazo:document.getElementById('d_prazo').value||null,
+    recorrencia:document.getElementById('d_rec').value,
     lead_id:document.getElementById('d_lead').value||null};
   if(!body.titulo){document.getElementById('d_erro').textContent='Descreva a demanda.';return}
   api('/api/crm/demandas',{method:'POST',body:JSON.stringify(body)})
@@ -889,18 +1044,26 @@ function abrirDemanda(id){
   '<label>Detalhes</label><textarea id="d_desc" rows="2">'+esc(d.descricao||'')+'</textarea>'+
   '<div class="duo"><div><label>Responsável</label><input id="d_resp" value="'+esc(d.responsavel||'')+'"/></div>'+
   '<div><label>Prazo</label><input id="d_prazo" type="date" value="'+esc(d.prazo?String(d.prazo).slice(0,10):'')+'"/></div></div>'+
+  '<label>Repetir</label><select id="d_rec">'+
+    '<option value=""'+(!d.recorrencia?' selected':'')+'>Não repete</option>'+
+    '<option value="semanal"'+(d.recorrencia==='semanal'?' selected':'')+'>Toda semana</option>'+
+    '<option value="mensal"'+(d.recorrencia==='mensal'?' selected':'')+'>Todo mês</option></select>'+
+  (d.recorrencia?'<p class="mini" style="margin:4px 0 0">↻ Recorrente: ao concluir, a próxima é criada sozinha com o prazo seguinte.</p>':'')+
   '<label>Lead vinculado</label><select id="d_lead">'+opts+'</select>'+
   '<div class="erroMsg" id="d_erro"></div>'+
   '<div class="duo" style="margin-top:12px"><button class="btn sm" onclick="salvarDemanda(\\''+d.id+'\\')">Salvar</button>'+
   (d.status==='a_fazer'?'<button class="btn ghost sm" onclick="moverDemanda(\\''+d.id+'\\',\\'em_andamento\\')">Iniciar</button>':'')+
   (d.status!=='concluida'?'<button class="btn ghost sm" style="color:var(--ok);border-color:rgba(62,207,142,.5)" onclick="moverDemanda(\\''+d.id+'\\',\\'concluida\\')">✓ Concluir</button>':
     '<button class="btn ghost sm" onclick="moverDemanda(\\''+d.id+'\\',\\'a_fazer\\')">Reabrir</button>')+
-  '<button class="btn ghost sm" style="color:var(--erro);border-color:var(--erro)" onclick="excluirDemanda(\\''+d.id+'\\')">Excluir</button></div>';
+  '<button class="btn ghost sm" style="color:var(--erro);border-color:var(--erro)" onclick="excluirDemanda(\\''+d.id+'\\')">Excluir</button></div>'+
+  cmtHtml('demanda',d.id);
   abrirModal(h);
+  carregarComentarios('demanda',d.id);
 }
 function salvarDemanda(id){
   var body={titulo:document.getElementById('d_tit').value.trim(),descricao:document.getElementById('d_desc').value.trim(),
     responsavel:document.getElementById('d_resp').value.trim(),prazo:document.getElementById('d_prazo').value||null,
+    recorrencia:document.getElementById('d_rec').value,
     lead_id:document.getElementById('d_lead').value||null};
   api('/api/crm/demandas/'+id,{method:'PATCH',body:JSON.stringify(body)})
     .then(function(){fecharModal();carregarDemandas()})

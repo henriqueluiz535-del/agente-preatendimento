@@ -231,6 +231,83 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ ok: true });
   });
 
+  // ---------- Perfil (nome e foto do usuário) ----------
+  app.get('/api/crm/perfil', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    try {
+      const { data, error } = await db.from('crm_usuarios').select('nome, email, foto').eq('id', u.id).maybeSingle();
+      if (error) throw error;
+      return reply.send({ nome: data?.nome ?? u.nome, email: data?.email ?? u.email, foto: (data as any)?.foto ?? null });
+    } catch {
+      // Coluna foto ainda sem migração — devolve o básico sem quebrar.
+      return reply.send({ nome: u.nome, email: u.email, foto: null });
+    }
+  });
+
+  app.patch('/api/crm/perfil', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const b = (req.body ?? {}) as { nome?: string; foto?: string | null };
+    const patch: Record<string, unknown> = {};
+    if (b.nome !== undefined && b.nome.trim()) patch.nome = b.nome.trim();
+    if (b.foto !== undefined) {
+      if (b.foto === null || b.foto === '') patch.foto = null;
+      else if (/^data:image\/(jpeg|png|webp);base64,/.test(b.foto) && b.foto.length <= 200_000) patch.foto = b.foto;
+      else return reply.code(400).send({ error: 'imagem inválida ou grande demais' });
+    }
+    if (Object.keys(patch).length === 0) return reply.code(400).send({ error: 'nada para atualizar' });
+    const { error } = await db.from('crm_usuarios').update(patch).eq('id', u.id);
+    if (error) {
+      logger.error({ err: error }, 'Falha ao salvar perfil do CRM');
+      return reply.code(500).send({ error: 'não consegui salvar — a migração v1.4 já foi rodada no Supabase?' });
+    }
+    return reply.send({ ok: true });
+  });
+
+  // ---------- Comentários (em demandas e leads) ----------
+  app.get('/api/crm/comentarios', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { demanda_id, lead_id } = req.query as { demanda_id?: string; lead_id?: string };
+    if (!demanda_id && !lead_id) return reply.code(400).send({ error: 'informe demanda_id ou lead_id' });
+    let q = db.from('crm_comentarios').select('*').eq('tenant_id', u.tenant_id).order('created_at');
+    q = demanda_id ? q.eq('demanda_id', demanda_id) : q.eq('lead_id', lead_id);
+    const { data, error } = await q.limit(200);
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ comentarios: data });
+  });
+
+  app.post('/api/crm/comentarios', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const b = (req.body ?? {}) as any;
+    if (!b.texto?.trim()) return reply.code(400).send({ error: 'escreva o comentário' });
+    if (!b.demanda_id && !b.lead_id) return reply.code(400).send({ error: 'informe demanda_id ou lead_id' });
+    const { data, error } = await db
+      .from('crm_comentarios')
+      .insert({
+        tenant_id: u.tenant_id,
+        demanda_id: b.demanda_id || null,
+        lead_id: b.lead_id || null,
+        autor: u.nome || u.email,
+        texto: String(b.texto).trim().slice(0, 2000),
+      })
+      .select('*')
+      .single();
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ comentario: data });
+  });
+
+  app.delete('/api/crm/comentarios/:id', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { id } = req.params as { id: string };
+    const { error } = await db.from('crm_comentarios').delete().eq('id', id).eq('tenant_id', u.tenant_id);
+    if (error) return reply.code(500).send({ error: error.message });
+    return reply.send({ ok: true });
+  });
+
   // ---------- Demandas (Kanban de tarefas com prazos) ----------
   const STATUS_DEMANDA = ['a_fazer', 'em_andamento', 'concluida'];
 
@@ -263,12 +340,21 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
         responsavel: b.responsavel ?? '',
         prazo: b.prazo || null,
         status: STATUS_DEMANDA.includes(b.status) ? b.status : 'a_fazer',
+        ...(['semanal', 'mensal'].includes(b.recorrencia) ? { recorrencia: b.recorrencia } : {}),
       })
       .select('*')
       .single();
     if (error) return reply.code(500).send({ error: error.message });
     return reply.send({ demanda: data });
   });
+
+  /** Próximo prazo de uma demanda recorrente (a partir do prazo atual ou de hoje). */
+  function proximoPrazo(prazoAtual: string | null, recorrencia: string): string {
+    const base = prazoAtual ? new Date(`${String(prazoAtual).slice(0, 10)}T12:00:00`) : new Date();
+    if (recorrencia === 'semanal') base.setDate(base.getDate() + 7);
+    else base.setMonth(base.getMonth() + 1);
+    return base.toISOString().slice(0, 10);
+  }
 
   app.patch('/api/crm/demandas/:id', async (req, reply) => {
     const u = await auth(req, reply);
@@ -286,8 +372,38 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     }
     if (b.titulo !== undefined && !String(b.titulo).trim()) delete patch.titulo;
     if (b.prazo !== undefined) patch.prazo = b.prazo || null;
+    if (b.recorrencia !== undefined) patch.recorrencia = ['semanal', 'mensal'].includes(b.recorrencia) ? b.recorrencia : '';
+
+    // Recorrência: ao CONCLUIR uma demanda recorrente, a próxima nasce sozinha.
+    let atual: any = null;
+    if (b.status === 'concluida') {
+      const { data } = await db
+        .from('crm_demandas')
+        .select('*')
+        .eq('id', id)
+        .eq('tenant_id', u.tenant_id)
+        .maybeSingle();
+      atual = data;
+    }
+
     const { error } = await db.from('crm_demandas').update(patch).eq('id', id).eq('tenant_id', u.tenant_id);
     if (error) return reply.code(500).send({ error: error.message });
+
+    const rec = (b.recorrencia !== undefined ? patch.recorrencia : atual?.recorrencia) as string | undefined;
+    if (b.status === 'concluida' && atual && rec && ['semanal', 'mensal'].includes(rec)) {
+      const { error: e2 } = await db.from('crm_demandas').insert({
+        tenant_id: u.tenant_id,
+        lead_id: atual.lead_id,
+        titulo: atual.titulo,
+        descricao: atual.descricao,
+        responsavel: atual.responsavel,
+        prazo: proximoPrazo(atual.prazo, rec),
+        status: 'a_fazer',
+        recorrencia: rec,
+      });
+      if (e2) logger.warn({ err: e2 }, 'Falha ao criar a próxima ocorrência da demanda recorrente');
+      return reply.send({ ok: true, proxima_criada: !e2 });
+    }
     return reply.send({ ok: true });
   });
 

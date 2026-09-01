@@ -255,6 +255,19 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
     ],
   },
 
+  {
+    // Cartão/empréstimo consignado VEM CARD para servidores públicos.
+    // Tese típica: cartão consignado com reserva de margem (RMC) contratado
+    // como se fosse empréstimo comum — desconto que nunca amortiza.
+    area: 'bancário — empréstimo/cartão VEM CARD (servidor público)',
+    perguntas: [
+      'Você é ou foi servidor(a) público(a)? De qual órgão ou prefeitura? (ESSENCIAL — sempre pergunte)',
+      'Você fez empréstimo ou tem cartão da VEM CARD? Em que ano, mais ou menos? (ESSENCIAL — sempre pergunte)',
+      'O desconto ainda aparece no seu contracheque? A dívida diminui ou parece nunca acabar? (ESSENCIAL — sempre pergunte)',
+      'Você tem um contracheque recente em mãos? Pode mandar uma foto por aqui mesmo.',
+    ],
+  },
+
   // ------------------------------------------------------------
   // CONSUMIDOR
   // ------------------------------------------------------------

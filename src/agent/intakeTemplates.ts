@@ -474,16 +474,19 @@ export function templatesParaPrompt(areasDoTenant: string[]): string {
     // "previdenciário — auxílio-doença" e "previdenciário (geral)" contam
     // como a área-base "previdenciário".
     const base = completa.split(' — ')[0].split(' (')[0].trim();
-    return declaradas.some(
-      (d) =>
-        d === base ||
-        d.startsWith(base) ||
-        base.startsWith(d) ||
-        base.includes(d) ||
-        // casamento por TESE: "bpc" encontra "previdenciário — BPC/LOAS",
-        // "auxílio-doença" encontra o bloco da tese etc.
-        completa.includes(d),
-    );
+    const semEspaco = (s: string) => s.replace(/[^a-z0-9]/g, '');
+    return declaradas.some((d) => {
+      if (d === base || d.startsWith(base) || base.startsWith(d) || base.includes(d)) return true;
+      // casamento por TESE: "bpc" encontra "previdenciário — BPC/LOAS",
+      // "auxílio-doença" encontra o bloco da tese etc.
+      if (completa.includes(d)) return true;
+      // tolerância a espaçamento/pontuação: "vemcard" casa com "vem card".
+      if (semEspaco(completa).includes(semEspaco(d))) return true;
+      // tolerância a palavras extras: "vem card servidor público" casa se
+      // TODAS as palavras (3+ letras) aparecerem no nome do bloco.
+      const palavras = d.split(/\s+/).filter((p) => p.length >= 3);
+      return palavras.length > 0 && palavras.every((p) => completa.includes(p));
+    });
   };
 
   let selecionados = INTAKE_TEMPLATES;

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant, listApelidosCriativo, setApelidoCriativo } from '../db/repositories.js';
+import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant, listApelidosCriativo, setApelidoCriativo, engajamentoPorConversa } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
@@ -188,10 +188,21 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ tenants });
   });
 
-  // Listar leads (opcionalmente filtrando por tenant_id)
+  // Listar leads (opcionalmente filtrando por tenant_id).
+  // Cada lead com conversa ganha o campo "engajou": o lead respondeu depois
+  // da primeira mensagem da Júria? (métrica de aproveitamento do 1º contato)
   app.get('/admin/leads', async (req, reply) => {
     const { tenant_id } = req.query as { tenant_id?: string };
     const leads = await listLeads(tenant_id);
+    try {
+      const convIds = leads.map((l: any) => l.conversation_id).filter(Boolean);
+      const eng = await engajamentoPorConversa(convIds);
+      for (const l of leads as any[]) {
+        l.engajou = l.conversation_id ? (eng[l.conversation_id] ?? false) : null;
+      }
+    } catch (err) {
+      logger.warn({ err }, 'Falha ao calcular engajamento do 1º contato (seguindo sem)');
+    }
     return reply.send({ leads });
   });
 

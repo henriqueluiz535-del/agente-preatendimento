@@ -317,17 +317,21 @@ async function renderCriativos(){
     if(!noPeriodo(l))return;
     const chave=l.criativo||l.criativo_titulo||(l.primeira_msg?('msg:'+String(l.primeira_msg).slice(0,60)):'(sem identificação)');
     const original=l.criativo_titulo||l.criativo||(l.primeira_msg?('“'+String(l.primeira_msg).slice(0,60)+'”'):'(sem identificação)');
-    if(!mapa[chave])mapa[chave]={leads:0,ops:0,id:null,original:original};
+    if(!mapa[chave])mapa[chave]={leads:0,ops:0,conv:0,resp:0,id:null,original:original};
     if(!mapa[chave].id&&l.criativo)mapa[chave].id=l.criativo;
     mapa[chave].leads++;
+    // Aproveitamento do 1º contato (só leads com conversa da Júria)
+    if(l.engajou===true||l.engajou===false){mapa[chave].conv++;if(l.engajou)mapa[chave].resp++}
     const op=l.qualificado===true||['qualificado','reuniao','proposta','negociacao','fechado'].indexOf(l.etapa)>=0;
     if(op)mapa[chave].ops++;
   });
   GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){
     const m=mapa[k];
     return {chave:k,rotulo:APELIDOS_CRIATIVO[k]||m.original,original:m.original,
-      renomeado:!!APELIDOS_CRIATIVO[k],leads:m.leads,ops:m.ops,id:m.id};
+      renomeado:!!APELIDOS_CRIATIVO[k],leads:m.leads,ops:m.ops,conv:m.conv,resp:m.resp,id:m.id};
   }).sort(function(a,b){return b.leads-a.leads});
+  const totConv=GRUPOS_CRIATIVO.reduce(function(a,g){return a+g.conv},0);
+  const totResp=GRUPOS_CRIATIVO.reduce(function(a,g){return a+g.resp},0);
 
   // Chegadas por dia (períodos longos são agrupados por semana pra caber)
   const porDia={};
@@ -377,9 +381,11 @@ async function renderCriativos(){
     '<button class="btn ghost sm" style="padding:6px 12px" onclick="verCriativosCustom()">Aplicar</button>'+
     '</div>'+
     '<div style="background:#141414;border:1px solid var(--linha);border-radius:12px;padding:12px 14px;margin:14px 0">'+
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:10px;flex-wrap:wrap">'+
         '<span class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.6px">Chegada de leads por '+(porSemana?'semana':'dia')+'</span>'+
-        '<span style="font-size:13px"><b style="color:var(--dourado)">'+totalPeriodo+'</b> <span class="muted">no período</span></span>'+
+        '<span style="font-size:13px"><b style="color:var(--dourado)">'+totalPeriodo+'</b> <span class="muted">no período</span>'+
+        (totConv>0?' · <b style="color:'+(totResp/totConv>=0.5?'#35c46f':'var(--dourado)')+'">'+Math.round(totResp/totConv*100)+'%</b> <span class="muted">responderam o 1º contato</span>':'')+
+        '</span>'+
       '</div>'+
       '<div style="display:flex;align-items:flex-end;gap:2px;height:64px">'+barras+'</div>'+
       '<div style="display:flex;justify-content:space-between;margin-top:5px" class="muted"><span style="font-size:11px">'+(seq.length?seq[0].rotulo:'')+'</span><span style="font-size:11px">'+rotuloFim+'</span></div>'+
@@ -399,8 +405,10 @@ async function renderCriativos(){
       '</div>'+
       (g.renomeado&&g.original!==g.rotulo?'<div class="muted" style="font-size:11px;margin-top:3px">Anúncio: '+esc(g.original)+'</div>':'')+
       (g.id&&g.id!==g.rotulo?'<div class="muted" style="font-size:11px;margin-top:3px">ID do anúncio no Meta: '+esc(g.id)+' <span style="opacity:.7">(cole na busca do Gerenciador pra achar o criativo)</span></div>':'')+
-      '<div style="display:flex;gap:22px;margin:10px 0 6px">'+
+      '<div style="display:flex;gap:22px;margin:10px 0 6px;flex-wrap:wrap">'+
         '<div><div style="font-size:20px;font-weight:800">'+g.leads+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Leads</div></div>'+
+        (g.conv>0?(function(){var pr=Math.round(g.resp/g.conv*100);var cr=pr>=50?'#35c46f':(pr>=30?'var(--dourado)':'#6f6a60');
+          return '<div><div style="font-size:20px;font-weight:800;color:'+cr+'">'+pr+'%</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Resp. 1º contato</div></div>'})():'')+
         '<div><div style="font-size:20px;font-weight:800">'+g.ops+'</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Oportunidades</div></div>'+
         '<div><div style="font-size:20px;font-weight:800;color:'+cor+'">'+pct+'%</div><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">Conversão</div></div>'+
       '</div>'+

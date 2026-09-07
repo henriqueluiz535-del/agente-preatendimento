@@ -76,6 +76,41 @@ export async function listLeads(tenantId?: string): Promise<any[]> {
   return data ?? [];
 }
 
+/**
+ * Engajamento no primeiro contato: para cada conversa, diz se o lead mandou
+ * alguma mensagem DEPOIS da primeira resposta da Júria (ou seja, respondeu o
+ * gancho em vez de sumir). Retorna mapa conversation_id -> boolean.
+ */
+export async function engajamentoPorConversa(convIds: string[]): Promise<Record<string, boolean>> {
+  const mapa: Record<string, boolean> = {};
+  if (!convIds.length) return mapa;
+  // Em lotes para não estourar o filtro IN
+  for (let i = 0; i < convIds.length; i += 100) {
+    const lote = convIds.slice(i, i + 100);
+    const { data, error } = await db
+      .from('messages')
+      .select('conversation_id, role, created_at')
+      .in('conversation_id', lote)
+      .order('created_at', { ascending: true })
+      .limit(10_000);
+    if (error) throw error;
+    const primeiraIa: Record<string, string> = {};
+    for (const m of (data ?? []) as any[]) {
+      if (m.role === 'assistant' && !primeiraIa[m.conversation_id]) {
+        primeiraIa[m.conversation_id] = m.created_at;
+      } else if (
+        m.role === 'user' &&
+        primeiraIa[m.conversation_id] &&
+        m.created_at > primeiraIa[m.conversation_id]
+      ) {
+        mapa[m.conversation_id] = true;
+      }
+    }
+    for (const id of lote) if (!(id in mapa)) mapa[id] = false;
+  }
+  return mapa;
+}
+
 // ---------- Conversations ----------
 
 /** Busca a conversa de um contato SEM criar (null se nunca conversou). */

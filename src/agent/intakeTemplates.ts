@@ -232,15 +232,15 @@ export const INTAKE_TEMPLATES: IntakeTemplate[] = [
     ],
   },
   {
-    area: 'bancário — superendividamento (pessoa física / servidor público)',
+    // Tese do superendividamento com foco no critério jurídico do escritório:
+    // servidor público com empréstimo descontado AUTOMATICAMENTE da conta
+    // corrente (débito em conta) — é isso que qualifica o lead.
+    area: 'bancário — superendividamento / débito automático em conta (servidor público)',
     perguntas: [
-      'Quanto da renda mensal está comprometida com dívidas, aproximadamente? (ESSENCIAL — sempre pergunte)',
-      'Quais são as principais dívidas (cartão, consignado, financiamento)?',
-      'Já tentou renegociar com os bancos?',
-      'Mesmo renegociando, as parcelas continuam pesadas?',
-      'Está sobrando dinheiro para as despesas básicas (alimentação, moradia)?',
-      'Consegue pagar as contas em dia?',
-      'Alguma dívida já está em cobrança judicial?',
+      'Você é ou foi servidor(a) público(a)? De qual órgão ou prefeitura? (ESSENCIAL — sempre pergunte)',
+      'Você tem empréstimos com parcelas descontadas automaticamente da sua conta corrente? (ESSENCIAL — sempre pergunte)',
+      'De qual banco (ou bancos) são esses descontos? (ESSENCIAL — sempre pergunte)',
+      'Você tem um extrato ou comprovante recente mostrando esses descontos? Pode mandar uma foto por aqui mesmo.',
     ],
   },
   {

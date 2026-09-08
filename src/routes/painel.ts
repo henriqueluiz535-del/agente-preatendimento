@@ -447,25 +447,10 @@ function calcCriativo(i,gasto){
   pinta('cpo'+i,'CPO '+(v>0&&g.ops?fmt(v/g.ops):'—'),v>0&&g.ops>0);
 }
 
-// Mensagem com anexo salvo: extrai o [arquivo:...] e vira botão de download
+// O caminho interno do anexo ([arquivo:...]) não aparece no painel da
+// agência — o download do arquivo é exclusivo do CRM do escritório.
 function renderMsgP(content){
-  var path=null;var m=String(content||'').match(/\\[arquivo:([^\\]]+)\\]/);
-  if(m){path=m[1];content=String(content).replace(m[0],'').trim()}
-  var h=esc(content);
-  if(path)h+=(content?'<br/>':'')+'<button class="btn ghost sm" style="margin-top:6px" onclick="baixarAnexoAdm(\\''+esc(path)+'\\')">⬇ Baixar anexo</button>';
-  return h;
-}
-function baixarAnexoAdm(path){
-  var hd=chave()?{'x-admin-key':chave()}:{'x-admin-token':tok()};
-  fetch('/admin/anexo?path='+encodeURIComponent(path),{headers:hd})
-    .then(function(r){if(!r.ok)throw new Error('erro '+r.status);return r.blob()})
-    .then(function(b){
-      var a=document.createElement('a');
-      a.href=URL.createObjectURL(b);
-      a.download=path.split('/').pop();
-      document.body.appendChild(a);a.click();a.remove();
-    })
-    .catch(function(e){alert('Não consegui baixar o anexo: '+e.message)});
+  return esc(String(content||'').replace(/\\[arquivo:[^\\]]+\\]/g,'').trim()||content);
 }
 async function verLead(id){
   const l=LEADS_ADMIN.find(function(x){return x.id===id});

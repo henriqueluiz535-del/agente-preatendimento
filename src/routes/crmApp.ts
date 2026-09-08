@@ -542,6 +542,25 @@ function renderNovidades(){
   el.innerHTML=h;
 }
 function carregarLeads(){return api('/api/crm/leads').then(function(d){LEADS=d.leads;return LEADS})}
+// Mensagem com anexo salvo: extrai o [arquivo:...] e vira botão de download
+function renderMsg(content){
+  var path=null;var m=String(content||'').match(/\\[arquivo:([^\\]]+)\\]/);
+  if(m){path=m[1];content=String(content).replace(m[0],'').trim()}
+  var h=esc(content);
+  if(path)h+=(content?'<br/>':'')+'<button class="btn ghost sm" style="margin-top:6px" onclick="baixarAnexo(\\''+esc(path)+'\\')">⬇ Baixar anexo</button>';
+  return h;
+}
+function baixarAnexo(path){
+  fetch('/api/crm/anexo?path='+encodeURIComponent(path),{headers:{'Authorization':'Bearer '+tk()}})
+    .then(function(r){if(!r.ok)throw new Error('erro '+r.status);return r.blob()})
+    .then(function(b){
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(b);
+      a.download=path.split('/').pop();
+      document.body.appendChild(a);a.click();a.remove();
+    })
+    .catch(function(e){alert('Não consegui baixar o anexo: '+e.message)});
+}
 // esqueleto de carregamento (efeito shimmer)
 function skl(){return '<div class="skl" style="height:88px;margin-bottom:12px"></div><div class="skl" style="height:200px;margin-bottom:12px"></div><div class="skl" style="height:120px"></div>'}
 // estado vazio com ícone e próximo passo
@@ -666,7 +685,7 @@ function abrirLead(id){
     if(!d.mensagens.length){box.innerHTML='<i>Sem conversa registrada (lead manual).</i>';return}
     var hh='<div class="chat" style="max-height:300px">';
     d.mensagens.forEach(function(m){
-      hh+='<div class="balao '+(m.role==='user'?'lead':'ia')+'">'+esc(m.content)+'<small>'+new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.role==='assistant'?' · Júria':'')+'</small></div>'});
+      hh+='<div class="balao '+(m.role==='user'?'lead':'ia')+'">'+renderMsg(m.content)+'<small>'+new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.role==='assistant'?' · Júria':'')+'</small></div>'});
     box.innerHTML=hh+'</div>';
   }).catch(function(){});
 }
@@ -781,7 +800,7 @@ function abrirChat(id){
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
     var h='';
     d.mensagens.forEach(function(m){
-      h+='<div class="balao '+(m.role==='user'?'lead':'ia')+'">'+esc(m.content)+'<small>'+new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.role==='assistant'?' · Júria':'')+'</small></div>'});
+      h+='<div class="balao '+(m.role==='user'?'lead':'ia')+'">'+renderMsg(m.content)+'<small>'+new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.role==='assistant'?' · Júria':'')+'</small></div>'});
     box.innerHTML=h||'<div class="vazio">Sem mensagens.</div>';
     box.scrollTop=box.scrollHeight;
   }).catch(function(e){box.innerHTML='<div class="vazio">Erro: '+esc(e.message)+'</div>'});

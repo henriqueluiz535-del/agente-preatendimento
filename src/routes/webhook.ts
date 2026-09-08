@@ -10,6 +10,7 @@ import {
 import { parseIncoming } from '../evolution/webhook.js';
 import { getBase64FromMediaMessage, sendText, foiEnviadoPeloBot } from '../evolution/client.js';
 import { transcricaoAtiva, transcreverAudio } from '../agent/transcribe.js';
+import { uploadAnexo, extensaoDoMime } from '../db/storage.js';
 import { handleLeadMessage } from '../core/conversation.js';
 
 export async function webhookRoutes(app: FastifyInstance): Promise<void> {
@@ -136,8 +137,25 @@ export async function webhookRoutes(app: FastifyInstance): Promise<void> {
       }
 
       // Anexo (documento/foto): entra como marcador para a IA saber que chegou,
-      // junto com a legenda, se houver.
-      if (msg.anexo) texto = texto ? `${msg.anexo} ${texto}` : msg.anexo;
+      // junto com a legenda, se houver. O ARQUIVO em si é baixado da Evolution
+      // e guardado no Storage — o advogado baixa pela conversa no CRM.
+      // O caminho vai embutido no marcador como "[arquivo:...]" (removido do
+      // texto antes de ir para a IA).
+      let marcadorAnexo = msg.anexo;
+      if (msg.anexo && msg.messageId) {
+        try {
+          const media = await getBase64FromMediaMessage(instance, msg.messageId);
+          if (media && media.base64.length <= 20_000_000) {
+            const path = `${tenant.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extensaoDoMime(media.mimetype)}`;
+            await uploadAnexo(path, media.base64, media.mimetype);
+            marcadorAnexo = `${msg.anexo}[arquivo:${path}]`;
+            logger.info({ instance, path }, 'Anexo do lead salvo no storage');
+          }
+        } catch (err) {
+          logger.warn({ err, instance }, 'Falha ao guardar anexo (seguindo só com o marcador)');
+        }
+      }
+      if (marcadorAnexo) texto = texto ? `${marcadorAnexo} ${texto}` : marcadorAnexo;
 
       if (!texto) return;
       await handleLeadMessage(tenant, msg.contato, msg.nomeContato, texto, {

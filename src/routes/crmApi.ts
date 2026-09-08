@@ -3,6 +3,7 @@ import { db } from '../db/client.js';
 import { logger } from '../logger.js';
 import { login, usuarioPorToken, criarUsuarioCrm, type CrmUsuario } from '../crm/auth.js';
 import { validarConvite } from '../crm/convite.js';
+import { baixarAnexoStorage } from '../db/storage.js';
 
 // Etapas válidas do funil
 const ETAPAS = ['novo', 'qualificado', 'reuniao', 'proposta', 'negociacao', 'fechado', 'perdido'];
@@ -162,6 +163,23 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       .limit(500);
     if (error) return reply.code(500).send({ error: error.message });
     return reply.send({ mensagens: data });
+  });
+
+  // ---------- Anexos das conversas (arquivos que o lead enviou) ----------
+  app.get('/api/crm/anexo', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { path } = req.query as { path?: string };
+    // Autorização: o caminho sempre começa com o tenant_id do dono.
+    if (!path || path.includes('..') || !path.startsWith(`${u.tenant_id}/`)) {
+      return reply.code(400).send({ error: 'anexo inválido' });
+    }
+    const arq = await baixarAnexoStorage(path);
+    if (!arq) return reply.code(404).send({ error: 'anexo não encontrado' });
+    return reply
+      .header('Content-Type', arq.contentType)
+      .header('Content-Disposition', `attachment; filename="${path.split('/').pop()}"`)
+      .send(arq.bytes);
   });
 
   // ---------- Eventos (agenda) ----------

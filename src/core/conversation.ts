@@ -80,7 +80,13 @@ export async function handleLeadMessage(
   }
 
   const history = await getRecentMessages(conversa.id, 30);
-  const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, history);
+  // O caminho do anexo no Storage ("[arquivo:...]") é detalhe interno do
+  // CRM/painel — sai do texto antes de ir para a IA.
+  const historyIA = history.map((m) => ({
+    ...m,
+    content: m.content.replace(/\[arquivo:[^\]]+\]/g, '').trim() || m.content,
+  }));
+  const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, historyIA);
 
   // Responde ao lead pelo WhatsApp
   await sendText(tenant.evolution_instance, contato, reply);

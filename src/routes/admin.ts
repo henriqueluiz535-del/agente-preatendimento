@@ -6,6 +6,7 @@ import { createInstance, connectInstance, connectionState, logoutInstance, delet
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
 import { gerarConvite } from '../crm/convite.js';
 import { loginEquipe, validarTokenEquipe, listarEquipe, criarMembro, removerMembro } from '../painel/equipe.js';
+import { baixarAnexoStorage } from '../db/storage.js';
 
 interface CriarTenantBody {
   nome_escritorio: string;
@@ -245,6 +246,20 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const { id } = req.params as { id: string };
     const mensagens = await listLeadMessages(id);
     return reply.send({ mensagens });
+  });
+
+  // Anexo de uma conversa (arquivo que o lead enviou), para o painel da agência
+  app.get('/admin/anexo', async (req, reply) => {
+    const { path } = req.query as { path?: string };
+    if (!path || path.includes('..') || !/^[0-9a-f-]{36}\//.test(path)) {
+      return reply.code(400).send({ error: 'anexo inválido' });
+    }
+    const arq = await baixarAnexoStorage(path);
+    if (!arq) return reply.code(404).send({ error: 'anexo não encontrado' });
+    return reply
+      .header('Content-Type', arq.contentType)
+      .header('Content-Disposition', `attachment; filename="${path.split('/').pop()}"`)
+      .send(arq.bytes);
   });
 
   // Criar/redefinir acesso ao CRM de um tenant já existente

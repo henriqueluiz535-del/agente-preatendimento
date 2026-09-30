@@ -837,8 +837,13 @@ function abrirChat(id){
   var c=l.conversations||{};
   var nome=l.nome||c.nome_contato||'(sem nome)';
   var hd=document.getElementById('wahd');
-  if(hd)hd.innerHTML='<div class="wava">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
+  if(hd)hd.innerHTML='<div class="wava" id="wavaHd">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
     '<div><b>'+esc(nome)+'</b><small>'+esc(c.contato||'')+(l.area_juridica?' · '+esc(l.area_juridica):'')+'</small></div>';
+  // foto de perfil do WhatsApp (quando o contato tiver uma pública)
+  api('/api/crm/leads/'+id+'/foto').then(function(d){
+    var av=document.getElementById('wavaHd');
+    if(av&&d.url){av.style.backgroundImage='url('+d.url+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent=''}
+  }).catch(function(){});
   var box=document.getElementById('cchat');box.innerHTML='<div class="vazio" style="color:#8696a0">Carregando…</div>';
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
     var h='';

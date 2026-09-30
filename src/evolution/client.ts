@@ -133,3 +133,17 @@ export async function getBase64FromMediaMessage(
     return null;
   }
 }
+
+/** URL da foto de perfil do WhatsApp de um contato (pública; pode não existir). */
+export async function fetchProfilePicture(instance: string, number: string): Promise<string | null> {
+  try {
+    const res = await evoFetch(`/chat/fetchProfilePictureUrl/${instance}`, {
+      method: 'POST',
+      body: JSON.stringify({ number }),
+    });
+    const url = res?.profilePictureUrl ?? res?.url ?? null;
+    return typeof url === 'string' && url.startsWith('https://') ? url : null;
+  } catch {
+    return null; // contato sem foto ou com privacidade — segue sem
+  }
+}

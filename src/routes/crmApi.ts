@@ -4,6 +4,7 @@ import { logger } from '../logger.js';
 import { login, usuarioPorToken, criarUsuarioCrm, type CrmUsuario } from '../crm/auth.js';
 import { validarConvite } from '../crm/convite.js';
 import { baixarAnexoStorage } from '../db/storage.js';
+import { fetchProfilePicture } from '../evolution/client.js';
 
 // Etapas válidas do funil
 const ETAPAS = ['novo', 'qualificado', 'reuniao', 'followup', 'proposta', 'negociacao', 'fechado', 'perdido'];
@@ -180,6 +181,36 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       .header('Content-Type', arq.contentType)
       .header('Content-Disposition', `attachment; filename="${path.split('/').pop()}"`)
       .send(arq.bytes);
+  });
+
+  // ---------- Foto de perfil do lead (WhatsApp) ----------
+  // Custo zero de IA: consulta a Evolution e guarda em cache por 6h.
+  const fotoCache = new Map<string, { url: string | null; ate: number }>();
+  app.get('/api/crm/leads/:id/foto', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { id } = req.params as { id: string };
+    const hit = fotoCache.get(id);
+    if (hit && hit.ate > Date.now()) return reply.send({ url: hit.url });
+    const { data: lead } = await db
+      .from('leads')
+      .select('conversation_id, conversations(contato)')
+      .eq('id', id)
+      .eq('tenant_id', u.tenant_id)
+      .maybeSingle();
+    const contato = (lead as any)?.conversations?.contato;
+    if (!contato) return reply.send({ url: null });
+    const { data: tenant } = await db
+      .from('tenants')
+      .select('evolution_instance, modo_atendimento')
+      .eq('id', u.tenant_id)
+      .maybeSingle();
+    let url: string | null = null;
+    if (tenant?.evolution_instance && tenant.modo_atendimento !== 'somente_crm') {
+      url = await fetchProfilePicture(tenant.evolution_instance, contato);
+    }
+    fotoCache.set(id, { url, ate: Date.now() + 6 * 3600_000 });
+    return reply.send({ url });
   });
 
   // ---------- Eventos (agenda) ----------

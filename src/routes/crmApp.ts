@@ -304,6 +304,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <label>Senha</label><input id="lSenha" type="password" placeholder="••••••••"/>
     <div class="erroMsg" id="lErro"></div>
     <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
+    <button class="btn ghost" style="width:100%;margin-top:8px;font-size:12.5px" onclick="esqueciSenha()">Esqueci minha senha</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
       Ambiente seguro · HENRIQUECER · v1.5.0
@@ -405,6 +406,13 @@ function fazerLogin(){
     .catch(function(e){document.getElementById('lErro').textContent=e.message});
 }
 function sair(){localStorage.removeItem(TK);document.getElementById('telaApp').classList.add('hidden');document.getElementById('telaLogin').classList.remove('hidden')}
+function esqueciSenha(){
+  abrirModal('<button class="fechar" onclick="fecharModal()">×</button>'+
+    '<h3>Redefinir senha</h3>'+
+    '<p style="font-size:13.5px;line-height:1.6;margin-top:8px">Sem problema! É rápido: chame o seu contato na <b>HENRIQUECER</b> (WhatsApp de sempre) e peça uma nova senha de acesso ao CRM.</p>'+
+    '<p class="mini" style="margin-top:6px">A equipe gera a senha nova em menos de um minuto — ou envia um link pra você mesmo criar a sua.</p>'+
+    '<button class="btn" style="width:100%;margin-top:14px" onclick="fecharModal()">Entendi</button>');
+}
 // ---------- cadastro por convite ----------
 var CONVITE=new URLSearchParams(location.search).get('convite');
 function telaCadastro(){

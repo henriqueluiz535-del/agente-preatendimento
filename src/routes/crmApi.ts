@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/client.js';
 import { logger } from '../logger.js';
-import { login, usuarioPorToken, criarUsuarioCrm, hashSenha, gerarSenhaAleatoria, type CrmUsuario } from '../crm/auth.js';
-import { validarConvite } from '../crm/convite.js';
+import { login, usuarioPorToken, criarUsuarioCrm, criarSessaoPorEmail, hashSenha, gerarSenhaAleatoria, type CrmUsuario } from '../crm/auth.js';
+import { validarConvite, validarAcessoDireto } from '../crm/convite.js';
 import { baixarAnexoStorage } from '../db/storage.js';
 import { fetchProfilePicture, sendText } from '../evolution/client.js';
 
@@ -40,6 +40,31 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       });
     } catch (err) {
       logger.error({ err }, 'Erro no login do CRM');
+      return reply.code(500).send({ error: 'erro interno' });
+    }
+  });
+
+  // ---------- Acesso direto (link mágico, sem senha) ----------
+  app.post('/api/crm/acesso', async (req, reply) => {
+    const { token } = (req.body ?? {}) as { token?: string };
+    if (!token) return reply.code(400).send({ error: 'token ausente' });
+    const email = validarAcessoDireto(token);
+    if (!email) return reply.code(401).send({ error: 'link inválido ou expirado' });
+    try {
+      const result = await criarSessaoPorEmail(email);
+      if (!result) return reply.code(401).send({ error: 'acesso não encontrado' });
+      const { data: tenant } = await db
+        .from('tenants')
+        .select('nome_escritorio, nome_advogado')
+        .eq('id', result.usuario.tenant_id)
+        .maybeSingle();
+      return reply.send({
+        token: result.token,
+        nome: result.usuario.nome ?? tenant?.nome_advogado ?? '',
+        escritorio: tenant?.nome_escritorio ?? '',
+      });
+    } catch (err) {
+      logger.error({ err }, 'Erro no acesso direto do CRM');
       return reply.code(500).send({ error: 'erro interno' });
     }
   });

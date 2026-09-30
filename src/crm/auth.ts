@@ -71,6 +71,27 @@ export async function login(email: string, senha: string): Promise<{ token: stri
   return { token, usuario: { id: data.id, tenant_id: data.tenant_id, email: data.email, nome: data.nome } };
 }
 
+/**
+ * Cria uma sessão SEM senha para um usuário existente (link mágico de
+ * acesso direto — o token do link já foi validado por assinatura antes).
+ */
+export async function criarSessaoPorEmail(
+  email: string,
+): Promise<{ token: string; usuario: CrmUsuario } | null> {
+  const { data, error } = await db
+    .from('crm_usuarios')
+    .select('*')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const token = randomBytes(24).toString('hex');
+  const expira = new Date(Date.now() + SESSAO_DIAS * 86400_000).toISOString();
+  const { error: sesErr } = await db.from('crm_sessoes').insert({ token, usuario_id: data.id, expira_em: expira });
+  if (sesErr) throw sesErr;
+  return { token, usuario: { id: data.id, tenant_id: data.tenant_id, email: data.email, nome: data.nome } };
+}
+
 export async function usuarioPorToken(token: string): Promise<CrmUsuario | null> {
   if (!token) return null;
   const { data, error } = await db

@@ -4,7 +4,7 @@ import { logger } from '../logger.js';
 import { createTenant, getTenantByInstance, listTenants, listLeads, listLeadMessages, desativarTenant, updateTenant, resumoCrmTenant, listApelidosCriativo, setApelidoCriativo, engajamentoPorConversa } from '../db/repositories.js';
 import { createInstance, connectInstance, connectionState, logoutInstance, deleteInstance } from '../evolution/client.js';
 import { criarUsuarioCrm, gerarSenhaAleatoria } from '../crm/auth.js';
-import { gerarConvite } from '../crm/convite.js';
+import { gerarConvite, gerarAcessoDireto } from '../crm/convite.js';
 import { loginEquipe, validarTokenEquipe, listarEquipe, criarMembro, removerMembro } from '../painel/equipe.js';
 
 interface CriarTenantBody {
@@ -70,7 +70,8 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
           const excluirTenant = req.method === 'DELETE' && /^\/admin\/tenants\/[^/]+$/.test(req.url);
           const desconectar = req.method === 'POST' && req.url.endsWith('/disconnect');
           const gerirEquipe = req.url.startsWith('/admin/equipe');
-          if (excluirTenant || desconectar || gerirEquipe) {
+          const acessoDireto = req.url.startsWith('/admin/crm-acesso-direto');
+          if (excluirTenant || desconectar || gerirEquipe || acessoDireto) {
             reply.code(403).send({ error: 'seu acesso não permite esta ação — fale com o administrador' });
             return;
           }
@@ -228,6 +229,16 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         .code(500)
         .send({ error: 'não consegui salvar — a migração dos apelidos já foi rodada no Supabase?' });
     }
+  });
+
+  // Link mágico de acesso direto ao CRM (sem senha) — SOMENTE chave mestra.
+  // O link vale 1 ano e loga como o usuário do e-mail informado.
+  app.get('/admin/crm-acesso-direto', async (req, reply) => {
+    const { email } = req.query as { email?: string };
+    if (!email?.trim()) return reply.code(400).send({ error: 'informe o email' });
+    const token = gerarAcessoDireto(email);
+    const host = req.headers.host ?? 'juria.henriquecerdigital.com';
+    return reply.send({ link: `https://${host}/crm?acesso=${token}`, validade_dias: 365 });
   });
 
   // Resumo do CRM do escritório (acompanhamento da entrega pela agência)

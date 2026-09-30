@@ -38,3 +38,40 @@ export function validarConvite(token: string): string | null {
     return null;
   }
 }
+
+// ============================================================
+// Acesso direto (link mágico) — entra no CRM sem digitar senha.
+// Token assinado com outra chave derivada; validade de 1 ano.
+// Gerado apenas pela chave mestra do painel (rota /admin).
+// ============================================================
+
+const ACESSO_DIAS = 365;
+
+function assinarAcesso(payload: string): string {
+  return createHmac('sha256', `acesso-direto:${config.adminApiKey}`).update(payload).digest('base64url');
+}
+
+export function gerarAcessoDireto(email: string): string {
+  const payload = Buffer.from(
+    JSON.stringify({ m: email.trim().toLowerCase(), e: Date.now() + ACESSO_DIAS * 86_400_000 }),
+  ).toString('base64url');
+  return `${payload}.${assinarAcesso(payload)}`;
+}
+
+/** Valida o link mágico e devolve o e-mail, ou null se inválido/expirado. */
+export function validarAcessoDireto(token: string): string | null {
+  const partes = token.split('.');
+  if (partes.length !== 2) return null;
+  const [payload, sig] = partes;
+  const esperado = assinarAcesso(payload);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(esperado);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const { m, e } = JSON.parse(Buffer.from(payload, 'base64url').toString());
+    if (typeof m !== 'string' || typeof e !== 'number' || Date.now() > e) return null;
+    return m;
+  } catch {
+    return null;
+  }
+}

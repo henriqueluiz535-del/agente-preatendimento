@@ -1171,7 +1171,20 @@ function excluirDemanda(id){
 
 // boot
 document.getElementById('lSenha').addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin()});
-if(CONVITE){telaCadastro()}
+var ACESSO=new URLSearchParams(location.search).get('acesso');
+if(ACESSO){
+  fetch('/api/crm/acesso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:ACESSO})})
+    .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'erro');return d})})
+    .then(function(d){
+      localStorage.setItem(TK,d.token);
+      localStorage.setItem('crm_nome',d.nome||'');
+      localStorage.setItem('crm_esc',d.escritorio||'');
+      history.replaceState(null,'','/crm');
+      iniciar();
+    })
+    .catch(function(e){var el=document.getElementById('lErro');if(el)el.textContent=e.message});
+}
+else if(CONVITE){telaCadastro()}
 else if(tk()){api('/api/crm/leads').then(iniciar).catch(function(){sair()})}
 </script>
 </body>

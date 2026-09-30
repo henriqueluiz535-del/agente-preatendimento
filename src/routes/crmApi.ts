@@ -281,6 +281,45 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ url });
   });
 
+  // ---------- Responder o lead direto pelo CRM ----------
+  // A mensagem sai pelo WhatsApp do escritório (Evolution) como envio MANUAL:
+  // o webhook reconhece e pausa a Júria por 24h naquela conversa (takeover),
+  // igual a responder pelo celular. Custo zero de IA.
+  app.post('/api/crm/leads/:id/responder', async (req, reply) => {
+    const u = await auth(req, reply);
+    if (!u) return;
+    const { id } = req.params as { id: string };
+    const texto = String(((req.body ?? {}) as any).texto ?? '').trim();
+    if (!texto) return reply.code(400).send({ error: 'escreva a mensagem' });
+    if (texto.length > 4000) return reply.code(400).send({ error: 'mensagem longa demais' });
+    const { data: lead } = await db
+      .from('leads')
+      .select('conversation_id, conversations(contato)')
+      .eq('id', id)
+      .eq('tenant_id', u.tenant_id)
+      .maybeSingle();
+    const contato = (lead as any)?.conversations?.contato;
+    if (!lead?.conversation_id || !contato) {
+      return reply.code(400).send({ error: 'este lead não tem conversa no WhatsApp' });
+    }
+    const { data: tenant } = await db
+      .from('tenants')
+      .select('evolution_instance, modo_atendimento')
+      .eq('id', u.tenant_id)
+      .maybeSingle();
+    if (!tenant?.evolution_instance || tenant.modo_atendimento === 'somente_crm') {
+      return reply.code(400).send({ error: 'este escritório não tem WhatsApp conectado' });
+    }
+    try {
+      await sendText(tenant.evolution_instance, contato, texto, { manual: true });
+    } catch (err) {
+      logger.error({ err }, 'Falha ao enviar resposta manual pelo CRM');
+      return reply.code(502).send({ error: 'não consegui enviar — o WhatsApp do escritório está conectado?' });
+    }
+    await db.from('messages').insert({ conversation_id: lead.conversation_id, role: 'advogado', content: texto });
+    return reply.send({ ok: true });
+  });
+
   // ---------- Eventos (agenda) ----------
   app.get('/api/crm/eventos', async (req, reply) => {
     const u = await auth(req, reply);

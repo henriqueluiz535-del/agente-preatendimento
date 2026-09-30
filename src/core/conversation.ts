@@ -80,11 +80,15 @@ export async function handleLeadMessage(
   }
 
   const history = await getRecentMessages(conversa.id, 30);
-  // O caminho do anexo no Storage ("[arquivo:...]") é detalhe interno do
-  // CRM/painel — sai do texto antes de ir para a IA.
+  // Ajustes internos antes de ir para a IA:
+  // - o caminho do anexo ("[arquivo:...]") sai do texto
+  // - mensagem enviada pelo ADVOGADO via CRM vira 'assistant' com marcador,
+  //   para a IA saber que não foi ela quem escreveu
   const historyIA = history.map((m) => ({
-    ...m,
-    content: m.content.replace(/\[arquivo:[^\]]+\]/g, '').trim() || m.content,
+    role: (m.role === 'advogado' ? 'assistant' : m.role) as 'user' | 'assistant',
+    content:
+      (m.role === 'advogado' ? '[mensagem enviada pelo advogado] ' : '') +
+      (m.content.replace(/\[arquivo:[^\]]+\]/g, '').trim() || m.content),
   }));
   const { reply, lead, prontoParaEncaminhar } = await pensar(tenant, historyIA);
 

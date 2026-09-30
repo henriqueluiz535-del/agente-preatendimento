@@ -476,7 +476,7 @@ async function verLead(id){
     if(!d.mensagens.length){box.innerHTML='<div class="muted" style="padding:8px">Sem conversa registrada.</div>';return}
     box.innerHTML=d.mensagens.map(function(m){
       const hora=m.created_at?new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-      return '<div class="balaoP '+(m.role==='user'?'lead':'ia')+'">'+renderMsgP(m.content)+'<small>'+hora+(m.role==='assistant'?' · Júria':'')+'</small></div>';
+      return '<div class="balaoP '+(m.role==='user'?'lead':'ia')+'">'+renderMsgP(m.content)+'<small>'+hora+(m.role==='assistant'?' · Júria':(m.role==='advogado'?' · Advogado':''))+'</small></div>';
     }).join('');
     box.scrollTop=box.scrollHeight;
   }catch(e){

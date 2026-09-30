@@ -278,6 +278,11 @@ body.claro .wam .btn.ghost{color:#1a7f6b;border-color:rgba(0,0,0,.2)}
 .wam.ia.ini{border-top-right-radius:0}
 .wam.ia.ini::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:#005c4b;border-left:0;border-right:0}
 .wfoot{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#1f2c34;color:#8696a0;font-size:12px;flex-shrink:0}
+.wfoot input{flex:1;background:#2a3942;border:none;border-radius:8px;padding:9px 12px;color:#e9edef;font-size:13px}
+.wfoot input::placeholder{color:#8696a0}
+.wfoot input:focus-visible{outline:none}
+.wsend{background:#00a884;border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.wsend:disabled{opacity:.5;cursor:default}
 body.claro .walist{background:#fff}
 body.claro .wlhd{background:#f0f2f5}
 body.claro .wbusca{background:#fff;border:1px solid #e0dcd4}
@@ -290,6 +295,7 @@ body.claro .wdia{background:#fff;color:#54656f}
 body.claro .wam.lead.ini::before{border-top-color:#ffffff}
 body.claro .wam.ia.ini::after{border-top-color:#d9fdd3}
 body.claro .wfoot{background:#f0f2f5;color:#54656f}
+body.claro .wfoot input{background:#fff;color:#111b21;border:1px solid #e0dcd4}
 /* ===== tema claro (v1.4) ===== */
 .temabt{position:fixed;top:12px;right:14px;z-index:45;width:36px;height:36px;border-radius:50%;border:1px solid var(--linha);
   background:var(--card);color:var(--dourado);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -343,7 +349,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <button class="btn ghost" style="width:100%;margin-top:8px;font-size:12.5px" onclick="esqueciSenha()">Esqueci minha senha</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.5.1
+      Ambiente seguro · HENRIQUECER · v1.6.0
     </div>
   </div>
 </div>
@@ -376,8 +382,13 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.5.1';
+var VERSAO='1.6.0';
 var NOVIDADES=[
+ {v:'1.6.0',data:'30/09/2026',titulo:'Responda o lead direto pelo CRM',itens:[
+  'Nova caixa de mensagem na aba Conversas: o que você digitar sai pelo WhatsApp do escritório, na hora',
+  'Ao responder, a Júria pausa sozinha naquela conversa por 24h (igual a responder pelo celular)',
+  'Suas mensagens aparecem no balão verde marcadas como "Advogado"'
+ ]},
  {v:'1.5.1',data:'30/09/2026',titulo:'Conversas ainda mais WhatsApp',itens:[
   'Lista de conversas com foto do lead, busca e filtros (Todas / Em triagem / Encaminhadas)',
   'Separadores de data (Hoje/Ontem) e balões com rabinho, igual ao WhatsApp Web',
@@ -901,7 +912,7 @@ function renderConversas(){
   '</div>'+
   '<div class="wachat"><div class="wahd" id="wahd"><div class="wava">?</div><div><b>Selecione uma conversa</b><small>na lista ao lado</small></div></div>'+
   '<div class="wabody" id="cchat"><div class="vazio" style="color:#8696a0">As mensagens aparecem aqui, como no WhatsApp.</div></div>'+
-  '<div class="wfoot">🔒 Pra responder, use o WhatsApp do escritório — a Júria pausa sozinha e tudo fica registrado aqui.</div>'+
+  '<div class="wfoot" id="wfoot">🔒 Selecione uma conversa pra ver e responder.</div>'+
   '</div></div>';
   el.innerHTML=h;
   desenhaListaConv();
@@ -944,10 +955,14 @@ function rotuloDia(iso){
 function renderMsgWA(m,ini){
   var conteudo=renderMsg(m.content);
   var hora=new Date(m.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  var meta='<span class="wmeta">'+hora+(m.role==='assistant'?' <span class="wtick">✓✓</span>':'')+'</span>';
+  var quem=m.role==='advogado'?' · Advogado':'';
+  var meta='<span class="wmeta">'+hora+quem+(m.role!=='user'?' <span class="wtick">✓✓</span>':'')+'</span>';
   return '<div class="wam '+(m.role==='user'?'lead':'ia')+(ini?' ini':'')+'">'+conteudo+meta+'</div>';
 }
+var CHAT_ATUAL=null;
+var PAUSA_AVISADA={};
 function abrirChat(id){
+  CHAT_ATUAL=id;
   document.querySelectorAll('.witem').forEach(function(x){x.classList.toggle('on',x.dataset.id===id)});
   var l=LEADS.find(function(x){return x.id===id})||{};
   var c=l.conversations||{};
@@ -956,6 +971,9 @@ function abrirChat(id){
   if(hd){hd.innerHTML='<div class="wava" id="wavaHd">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
     '<div><b>'+esc(nome)+'</b><small>'+esc(c.contato||'')+(l.area_juridica?' · '+esc(l.area_juridica):'')+'</small></div>';
     pintarFotoLead(id,'wavaHd');}
+  var ft=document.getElementById('wfoot');
+  if(ft)ft.innerHTML='<input id="wmsg" placeholder="Digite uma mensagem" onkeydown="if(event.key===\\'Enter\\')enviarResposta()"/>'+
+    '<button class="wsend" id="wsendBt" onclick="enviarResposta()" title="Enviar pelo WhatsApp do escritório">➤</button>';
   var box=document.getElementById('cchat');box.innerHTML='<div class="vazio" style="color:#8696a0">Carregando…</div>';
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
     var h='';var diaAnt='';var roleAnt='';
@@ -968,6 +986,30 @@ function abrirChat(id){
     box.innerHTML=h||'<div class="vazio" style="color:#8696a0">Sem mensagens.</div>';
     box.scrollTop=box.scrollHeight;
   }).catch(function(e){box.innerHTML='<div class="vazio" style="color:#8696a0">Erro: '+esc(e.message)+'</div>'});
+}
+function enviarResposta(){
+  var inp=document.getElementById('wmsg');var bt=document.getElementById('wsendBt');
+  var texto=(inp&&inp.value||'').trim();
+  if(!texto||!CHAT_ATUAL)return;
+  var id=CHAT_ATUAL;
+  if(bt)bt.disabled=true;
+  api('/api/crm/leads/'+id+'/responder',{method:'POST',body:JSON.stringify({texto:texto})})
+    .then(function(){
+      var box=document.getElementById('cchat');
+      if(box&&CHAT_ATUAL===id){
+        if(box.querySelector('.vazio'))box.innerHTML='';
+        box.insertAdjacentHTML('beforeend',renderMsgWA({role:'advogado',content:texto,created_at:new Date().toISOString()},true));
+        if(!PAUSA_AVISADA[id]){
+          PAUSA_AVISADA[id]=true;
+          box.insertAdjacentHTML('beforeend','<div class="wdia">✋ Júria pausada nesta conversa por 24h — responda à vontade</div>');
+        }
+        box.scrollTop=box.scrollHeight;
+      }
+      if(inp)inp.value='';
+      if(bt)bt.disabled=false;
+      if(inp)inp.focus();
+    })
+    .catch(function(e){if(bt)bt.disabled=false;alert('Não consegui enviar: '+e.message)});
 }
 
 // =============== AGENDA ===============

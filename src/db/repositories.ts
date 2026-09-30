@@ -309,7 +309,11 @@ export async function getTenantById(tenantId: string): Promise<Tenant | null> {
 
 // ---------- Messages ----------
 
-export async function addMessage(conversationId: string, role: 'user' | 'assistant', content: string): Promise<void> {
+export async function addMessage(
+  conversationId: string,
+  role: 'user' | 'assistant' | 'advogado',
+  content: string,
+): Promise<void> {
   const { error } = await db.from('messages').insert({ conversation_id: conversationId, role, content });
   if (error) throw error;
 }

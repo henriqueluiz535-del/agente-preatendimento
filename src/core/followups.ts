@@ -114,7 +114,12 @@ async function gerarMensagem(
   total: number,
   ehUltimo: boolean,
 ): Promise<string> {
-  const historico = await getRecentMessages(conversationId, 20);
+  const bruto = await getRecentMessages(conversationId, 20);
+  // Mensagens manuais do advogado (via CRM) viram 'assistant' para a IA.
+  const historico = bruto.map((m) => ({
+    role: (m.role === 'advogado' ? 'assistant' : m.role) as 'user' | 'assistant',
+    content: m.content,
+  }));
   const instrucao = ehUltimo
     ? 'O cliente está sem responder há bastante tempo. Escreva UMA mensagem curta (máx. 2 frases) e cordial de DESPEDIDA: diga que vai encerrar o atendimento por enquanto para não incomodar, e que ele pode chamar a qualquer momento para retomar. Não use ferramentas. Responda apenas com a mensagem.'
     : `O cliente está sem responder há algum tempo (tentativa ${tentativa} de ${total} de reengajamento). Escreva UMA mensagem curta (máx. 2 frases), cordial e leve, retomando o assunto da conversa e convidando a pessoa a continuar. Varie a abordagem em relação às mensagens anteriores. Não use ferramentas. Responda apenas com a mensagem.`;

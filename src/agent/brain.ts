@@ -17,7 +17,10 @@ export interface BrainResult {
  * Processa o histórico da conversa e devolve a resposta da IA + dados extraídos.
  * Roda o loop de tool use: a IA pode chamar "registrar_lead" antes de responder.
  */
-export async function pensar(tenant: Tenant, history: Message[]): Promise<BrainResult> {
+export async function pensar(
+  tenant: Tenant,
+  history: { role: 'user' | 'assistant'; content: string }[],
+): Promise<BrainResult> {
   const system = buildSystemPrompt(tenant);
 
   const messages: Anthropic.MessageParam[] = history.map((m) => ({

@@ -63,10 +63,20 @@ function paraFormatoWhatsApp(text: string): string {
     .replace(/^#{1,6}\s+/gm, '');
 }
 
-/** Envia uma mensagem de texto para um número/JID através de uma instância. */
-export async function sendText(instance: string, number: string, text: string): Promise<void> {
+/**
+ * Envia uma mensagem de texto para um número/JID através de uma instância.
+ * opts.manual = true: envio feito por um HUMANO pelo CRM — NÃO marca como
+ * mensagem do bot, para o webhook reconhecer como resposta manual e pausar
+ * a Júria naquela conversa (mesmo takeover do celular).
+ */
+export async function sendText(
+  instance: string,
+  number: string,
+  text: string,
+  opts: { manual?: boolean } = {},
+): Promise<void> {
   const texto = paraFormatoWhatsApp(text);
-  enviadosPeloBot.set(chaveEnvio(instance, number, texto), Date.now() + TTL_ENVIO_MS);
+  if (!opts.manual) enviadosPeloBot.set(chaveEnvio(instance, number, texto), Date.now() + TTL_ENVIO_MS);
   await evoFetch(`/message/sendText/${instance}`, {
     method: 'POST',
     body: JSON.stringify({ number, text: texto }),

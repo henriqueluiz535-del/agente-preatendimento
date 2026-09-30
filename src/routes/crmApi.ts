@@ -1,10 +1,10 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/client.js';
 import { logger } from '../logger.js';
-import { login, usuarioPorToken, criarUsuarioCrm, type CrmUsuario } from '../crm/auth.js';
+import { login, usuarioPorToken, criarUsuarioCrm, hashSenha, gerarSenhaAleatoria, type CrmUsuario } from '../crm/auth.js';
 import { validarConvite } from '../crm/convite.js';
 import { baixarAnexoStorage } from '../db/storage.js';
-import { fetchProfilePicture } from '../evolution/client.js';
+import { fetchProfilePicture, sendText } from '../evolution/client.js';
 
 // Etapas válidas do funil
 const ETAPAS = ['novo', 'qualificado', 'reuniao', 'followup', 'proposta', 'negociacao', 'fechado', 'perdido'];
@@ -42,6 +42,49 @@ export async function crmApiRoutes(app: FastifyInstance): Promise<void> {
       logger.error({ err }, 'Erro no login do CRM');
       return reply.code(500).send({ error: 'erro interno' });
     }
+  });
+
+  // ---------- Esqueci minha senha (sem e-mail) ----------
+  // Gera uma senha nova e envia pro WhatsApp do ADVOGADO cadastrado no card
+  // (o mesmo número dos avisos de lead) — canal já verificado, custo zero.
+  // Quem digitar e-mail alheio só faz a senha chegar ao dono verdadeiro.
+  const resetRecentes = new Map<string, number>();
+  app.post('/api/crm/esqueci', async (req, reply) => {
+    const { email } = (req.body ?? {}) as { email?: string };
+    const chave = (email ?? '').trim().toLowerCase();
+    if (!chave) return reply.code(400).send({ error: 'informe o e-mail' });
+    // No máximo 1 pedido a cada 10 minutos por e-mail
+    const ultimo = resetRecentes.get(chave) ?? 0;
+    if (Date.now() - ultimo < 10 * 60_000) return reply.send({ ok: true });
+    resetRecentes.set(chave, Date.now());
+    try {
+      const { data: usuario } = await db
+        .from('crm_usuarios')
+        .select('id, tenant_id, email')
+        .eq('email', chave)
+        .maybeSingle();
+      if (!usuario) return reply.send({ ok: true }); // resposta idêntica — sem vazar cadastro
+      const { data: tenant } = await db
+        .from('tenants')
+        .select('evolution_instance, whatsapp_advogado, modo_atendimento, nome_escritorio')
+        .eq('id', usuario.tenant_id)
+        .maybeSingle();
+      if (!tenant?.whatsapp_advogado || !tenant.evolution_instance || tenant.modo_atendimento === 'somente_crm') {
+        return reply.send({ ok: true });
+      }
+      const senha = gerarSenhaAleatoria();
+      const { error } = await db.from('crm_usuarios').update({ senha_hash: hashSenha(senha) }).eq('id', usuario.id);
+      if (error) throw error;
+      await sendText(
+        tenant.evolution_instance,
+        tenant.whatsapp_advogado,
+        `🔐 CRM HENRIQUECER — redefinição de senha\n\nSua nova senha de acesso é: *${senha}*\n\nEntre com o e-mail ${usuario.email} em juria.henriquecerdigital.com/crm\n\nSe não foi você que pediu, fale com a HENRIQUECER.`,
+      );
+      logger.info({ email: chave }, 'Senha do CRM redefinida e enviada ao WhatsApp do advogado');
+    } catch (err) {
+      logger.error({ err }, 'Falha no esqueci-senha do CRM');
+    }
+    return reply.send({ ok: true });
   });
 
   // ---------- Cadastro por convite (o advogado cria o próprio acesso) ----------

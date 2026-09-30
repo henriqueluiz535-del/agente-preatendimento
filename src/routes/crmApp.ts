@@ -409,9 +409,25 @@ function sair(){localStorage.removeItem(TK);document.getElementById('telaApp').c
 function esqueciSenha(){
   abrirModal('<button class="fechar" onclick="fecharModal()">×</button>'+
     '<h3>Redefinir senha</h3>'+
-    '<p style="font-size:13.5px;line-height:1.6;margin-top:8px">Sem problema! É rápido: chame o seu contato na <b>HENRIQUECER</b> (WhatsApp de sempre) e peça uma nova senha de acesso ao CRM.</p>'+
-    '<p class="mini" style="margin-top:6px">A equipe gera a senha nova em menos de um minuto — ou envia um link pra você mesmo criar a sua.</p>'+
-    '<button class="btn" style="width:100%;margin-top:14px" onclick="fecharModal()">Entendi</button>');
+    '<p style="font-size:13.5px;line-height:1.6;margin-top:8px">Digite o e-mail do seu acesso. Uma senha nova será enviada pro <b>WhatsApp do escritório cadastrado</b> (o número que recebe os avisos de leads).</p>'+
+    '<label>Seu e-mail</label><input id="es_email" type="text" placeholder="advogado@seuescritorio.com"/>'+
+    '<div class="erroMsg" id="es_erro"></div>'+
+    '<button class="btn" style="width:100%;margin-top:12px" id="es_btn" onclick="enviarEsqueci()">Enviar nova senha</button>');
+}
+function enviarEsqueci(){
+  var email=document.getElementById('es_email').value.trim();
+  if(!email){document.getElementById('es_erro').textContent='Digite o e-mail.';return}
+  var b=document.getElementById('es_btn');b.disabled=true;b.textContent='Enviando…';
+  fetch('/api/crm/esqueci',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})})
+    .then(function(r){return r.json()})
+    .then(function(){
+      abrirModal('<button class="fechar" onclick="fecharModal()">×</button>'+
+        '<h3>Pedido enviado ✅</h3>'+
+        '<p style="font-size:13.5px;line-height:1.6;margin-top:8px">Se o e-mail estiver cadastrado, a senha nova já chegou no <b>WhatsApp do escritório</b>. Confira lá e volte pra entrar.</p>'+
+        '<p class="mini" style="margin-top:6px">Não chegou em alguns minutos? Fale com o seu contato na HENRIQUECER — a equipe redefine na hora.</p>'+
+        '<button class="btn" style="width:100%;margin-top:14px" onclick="fecharModal()">Voltar ao login</button>');
+    })
+    .catch(function(){document.getElementById('es_erro').textContent='Erro ao enviar — tente de novo.';b.disabled=false;b.textContent='Enviar nova senha'});
 }
 // ---------- cadastro por convite ----------
 var CONVITE=new URLSearchParams(location.search).get('convite');

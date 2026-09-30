@@ -6,7 +6,7 @@ import { validarConvite } from '../crm/convite.js';
 import { baixarAnexoStorage } from '../db/storage.js';
 
 // Etapas válidas do funil
-const ETAPAS = ['novo', 'qualificado', 'reuniao', 'proposta', 'negociacao', 'fechado', 'perdido'];
+const ETAPAS = ['novo', 'qualificado', 'reuniao', 'followup', 'proposta', 'negociacao', 'fechado', 'perdido'];
 
 async function auth(req: FastifyRequest, reply: FastifyReply): Promise<CrmUsuario | null> {
   const header = req.headers.authorization ?? '';

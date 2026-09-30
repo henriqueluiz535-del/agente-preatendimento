@@ -113,6 +113,7 @@ tbody tr:hover{background:#1d1d1d}
 .st{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap;background:#2a2a2a;color:#ccc}
 .st.qualificado{background:rgba(109,179,242,.14);color:var(--azul)}
 .st.reuniao{background:rgba(232,184,75,.16);color:var(--dourado)}
+.st.followup{background:rgba(109,179,242,.14);color:var(--azul)}
 .st.proposta,.st.negociacao{background:rgba(181,140,230,.16);color:var(--roxo)}
 .st.fechado{background:rgba(62,207,142,.16);color:var(--ok)}
 .st.perdido{background:rgba(255,107,94,.13);color:var(--erro)}
@@ -229,6 +230,30 @@ tbody tr{transition:background .12s ease}
 .cmtform{display:flex;gap:8px;margin-top:8px}
 .cmtform input{flex:1}
 .recb{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:6px;margin:5px 4px 0 0;background:rgba(181,140,230,.16);color:var(--roxo)}
+/* ===== conversas estilo WhatsApp (v1.5) ===== */
+.wachat{display:flex;flex-direction:column;border:1px solid var(--linha);border-radius:14px;overflow:hidden;max-height:70vh;min-height:420px;background:#0b141a}
+.wahd{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#1f2c34;flex-shrink:0}
+.wava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6a7175,#4a5155);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wahd b{font-size:13.5px;color:#e9edef;display:block;line-height:1.2}
+.wahd small{color:#8696a0;font-size:11px}
+.wabody{flex:1;overflow:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;
+  background-color:#0b141a;background-image:radial-gradient(rgba(255,255,255,.028) 1px,transparent 1.2px);background-size:17px 17px}
+.wam{max-width:78%;padding:7px 9px 5px;border-radius:9px;font-size:13.2px;line-height:1.4;color:#e9edef;white-space:pre-wrap;box-shadow:0 1px 1px rgba(0,0,0,.35);margin-bottom:3px}
+.wam.lead{background:#202c33;align-self:flex-start;border-top-left-radius:2px}
+.wam.ia{background:#005c4b;align-self:flex-end;border-top-right-radius:2px}
+.wmeta{float:right;margin:8px -3px -2px 10px;font-size:10px;color:rgba(233,237,239,.55);white-space:nowrap}
+.wtick{color:#53bdeb;letter-spacing:-2px}
+.wam .btn.ghost{color:#8fd3c7;border-color:rgba(255,255,255,.25)}
+body.claro .wachat{background:#efeae2}
+body.claro .wahd{background:#f0f2f5}
+body.claro .wahd b{color:#111b21}
+body.claro .wabody{background-color:#efeae2;background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1.2px)}
+body.claro .wam{color:#111b21;box-shadow:0 1px 1px rgba(0,0,0,.1)}
+body.claro .wam.lead{background:#ffffff}
+body.claro .wam.ia{background:#d9fdd3}
+body.claro .wmeta{color:rgba(17,27,33,.45)}
+body.claro .wtick{color:#4fb3e3}
+body.claro .wam .btn.ghost{color:#1a7f6b;border-color:rgba(0,0,0,.2)}
 /* ===== tema claro (v1.4) ===== */
 .temabt{position:fixed;top:12px;right:14px;z-index:45;width:36px;height:36px;border-radius:50%;border:1px solid var(--linha);
   background:var(--card);color:var(--dourado);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -281,7 +306,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <button class="btn" style="width:100%;margin-top:12px" onclick="fazerLogin()">Acessar sistema</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.4.0
+      Ambiente seguro · HENRIQUECER · v1.5.0
     </div>
   </div>
 </div>
@@ -314,8 +339,13 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.4.0';
+var VERSAO='1.5.0';
 var NOVIDADES=[
+ {v:'1.5.0',data:'30/09/2026',titulo:'Conversas com cara de WhatsApp',itens:[
+  'Aba Conversas redesenhada no visual do WhatsApp: balões verdes e escuros, cabeçalho com o contato e confirmação de envio',
+  'Nova etapa Follow-up no funil, entre Reunião agendada e Proposta — pra nenhum lead esfriar sem dono',
+  'A Júria não responde mais perguntas sobre endereço/localização do escritório — ela registra a dúvida e o advogado assume essa parte'
+ ]},
  {v:'1.4.0',data:'28/08/2026',titulo:'Equipe trabalhando junta',itens:[
   'Comentários dentro das demandas e dos leads — a equipe conversa no próprio card e o histórico fica guardado',
   'Demandas recorrentes: marque "toda semana" ou "todo mês" e, ao concluir, a próxima é criada sozinha',
@@ -351,7 +381,7 @@ var NOVIDADES=[
 ];
 var SBELL='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
 var LEADS=[]; var ORIGENS=['anúncio','indicação']; var EVENTOS=[];
-var ETAPAS=[['novo','Novo'],['qualificado','Qualificado'],['reuniao','Reunião agendada'],['proposta','Proposta enviada'],['negociacao','Negociação'],['fechado','Venda fechada'],['perdido','Venda perdida']];
+var ETAPAS=[['novo','Novo'],['qualificado','Qualificado'],['reuniao','Reunião agendada'],['followup','Follow-up'],['proposta','Proposta enviada'],['negociacao','Negociação'],['fechado','Venda fechada'],['perdido','Venda perdida']];
 function etLabel(e){var f=ETAPAS.filter(function(x){return x[0]===e});return f.length?f[0][1]:(e||'novo')}
 function tk(){return localStorage.getItem(TK)||''}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -791,19 +821,31 @@ function renderConversas(){
   comConversa.forEach(function(l){var c=l.conversations||{};
     h+='<div class="convitem" data-id="'+l.id+'" onclick="abrirChat(\\''+l.id+'\\')"><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b>'+
        '<small>'+esc(l.area_juridica||'')+' · '+esc(c.status||'')+'</small></div>'});
-  h+='</div><div class="chat" id="cchat"><div class="vazio">Selecione uma conversa ao lado.</div></div></div>';
+  h+='</div><div class="wachat"><div class="wahd" id="wahd"><div class="wava">?</div><div><b>Selecione uma conversa</b><small>ao lado</small></div></div>'+
+     '<div class="wabody" id="cchat"><div class="vazio" style="color:#8696a0">As mensagens aparecem aqui, como no WhatsApp.</div></div></div></div>';
   el.innerHTML=h;
+}
+function renderMsgWA(m){
+  var conteudo=renderMsg(m.content);
+  var hora=new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+new Date(m.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  var meta='<span class="wmeta">'+hora+(m.role==='assistant'?' <span class="wtick">✓✓</span>':'')+'</span>';
+  return '<div class="wam '+(m.role==='user'?'lead':'ia')+'">'+conteudo+meta+'</div>';
 }
 function abrirChat(id){
   document.querySelectorAll('.convitem').forEach(function(x){x.classList.toggle('on',x.dataset.id===id)});
-  var box=document.getElementById('cchat');box.innerHTML='<div class="vazio">Carregando…</div>';
+  var l=LEADS.find(function(x){return x.id===id})||{};
+  var c=l.conversations||{};
+  var nome=l.nome||c.nome_contato||'(sem nome)';
+  var hd=document.getElementById('wahd');
+  if(hd)hd.innerHTML='<div class="wava">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
+    '<div><b>'+esc(nome)+'</b><small>'+esc(c.contato||'')+(l.area_juridica?' · '+esc(l.area_juridica):'')+'</small></div>';
+  var box=document.getElementById('cchat');box.innerHTML='<div class="vazio" style="color:#8696a0">Carregando…</div>';
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
     var h='';
-    d.mensagens.forEach(function(m){
-      h+='<div class="balao '+(m.role==='user'?'lead':'ia')+'">'+renderMsg(m.content)+'<small>'+new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.role==='assistant'?' · Júria':'')+'</small></div>'});
-    box.innerHTML=h||'<div class="vazio">Sem mensagens.</div>';
+    d.mensagens.forEach(function(m){h+=renderMsgWA(m)});
+    box.innerHTML=h||'<div class="vazio" style="color:#8696a0">Sem mensagens.</div>';
     box.scrollTop=box.scrollHeight;
-  }).catch(function(e){box.innerHTML='<div class="vazio">Erro: '+esc(e.message)+'</div>'});
+  }).catch(function(e){box.innerHTML='<div class="vazio" style="color:#8696a0">Erro: '+esc(e.message)+'</div>'});
 }
 
 // =============== AGENDA ===============

@@ -280,7 +280,7 @@ export async function resumoCrmTenant(tenantId: string, dias: number): Promise<a
     qualificados: leads.filter(
       (l: any) =>
         l.qualificado === true ||
-        ['qualificado', 'reuniao', 'proposta', 'negociacao', 'fechado'].includes(l.etapa),
+        ['qualificado', 'reuniao', 'followup', 'proposta', 'negociacao', 'fechado'].includes(l.etapa),
     ).length,
     reunioes_agendadas: evs.filter((e: any) => stEv(e) === 'pendente' && e.inicio >= agora).length,
     reunioes_realizadas: evs.filter(

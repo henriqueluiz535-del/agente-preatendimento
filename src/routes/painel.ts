@@ -322,7 +322,7 @@ async function renderCriativos(){
     mapa[chave].leads++;
     // Aproveitamento do 1º contato (só leads com conversa da Júria)
     if(l.engajou===true||l.engajou===false){mapa[chave].conv++;if(l.engajou)mapa[chave].resp++}
-    const op=l.qualificado===true||['qualificado','reuniao','proposta','negociacao','fechado'].indexOf(l.etapa)>=0;
+    const op=l.qualificado===true||['qualificado','reuniao','followup','proposta','negociacao','fechado'].indexOf(l.etapa)>=0;
     if(op)mapa[chave].ops++;
   });
   GRUPOS_CRIATIVO=Object.keys(mapa).map(function(k){

@@ -254,6 +254,42 @@ body.claro .wam.ia{background:#d9fdd3}
 body.claro .wmeta{color:rgba(17,27,33,.45)}
 body.claro .wtick{color:#4fb3e3}
 body.claro .wam .btn.ghost{color:#1a7f6b;border-color:rgba(0,0,0,.2)}
+/* lista de conversas estilo WhatsApp Web (v1.5.1) */
+.walist{background:#111b21;border:1px solid var(--linha);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;max-height:70vh;min-height:420px}
+.wlhd{padding:10px 12px;background:#1f2c34;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.wbusca{display:flex;align-items:center;gap:8px;background:#202c33;border-radius:8px;padding:5px 10px}
+.wbusca input{background:none;border:none;padding:2px;font-size:12.5px;color:#e9edef;width:100%}
+.wbusca input:focus-visible{outline:none}
+.wchips{display:flex;gap:6px}
+.wchip{background:#202c33;color:#8696a0;border:none;border-radius:999px;padding:4px 12px;font-size:11.5px;font-weight:600;cursor:pointer}
+.wchip.on{background:rgba(0,168,132,.18);color:#00a884}
+.wlitens{flex:1;overflow:auto}
+.witem{display:flex;gap:11px;align-items:center;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(134,150,160,.1)}
+.witem:hover,.witem.on{background:#202c33}
+.witem .wava{width:42px;height:42px;font-size:17px;background-size:cover;background-position:center}
+.witem .wtx{flex:1;min-width:0}
+.witem b{display:block;font-size:13.5px;color:#e9edef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.witem small{display:block;font-size:11.5px;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.witem .whora{font-size:10.5px;color:#8696a0;align-self:flex-start;padding-top:4px;flex-shrink:0}
+.wdia{align-self:center;background:#1f2c34;color:#8696a0;font-size:10.5px;font-weight:600;border-radius:7px;padding:4px 11px;margin:8px 0 4px;box-shadow:0 1px 1px rgba(0,0,0,.25)}
+.wam{position:relative}
+.wam.lead.ini{border-top-left-radius:0}
+.wam.lead.ini::before{content:'';position:absolute;left:-7px;top:0;border:7px solid transparent;border-top-color:#202c33;border-right:0;border-left:0}
+.wam.ia.ini{border-top-right-radius:0}
+.wam.ia.ini::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:#005c4b;border-left:0;border-right:0}
+.wfoot{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#1f2c34;color:#8696a0;font-size:12px;flex-shrink:0}
+body.claro .walist{background:#fff}
+body.claro .wlhd{background:#f0f2f5}
+body.claro .wbusca{background:#fff;border:1px solid #e0dcd4}
+body.claro .wbusca input{color:#111b21}
+body.claro .wchip{background:#e6e8eb;color:#54656f}
+body.claro .wchip.on{background:#d9fdd3;color:#008069}
+body.claro .witem:hover,body.claro .witem.on{background:#f5f6f6}
+body.claro .witem b{color:#111b21}
+body.claro .wdia{background:#fff;color:#54656f}
+body.claro .wam.lead.ini::before{border-top-color:#ffffff}
+body.claro .wam.ia.ini::after{border-top-color:#d9fdd3}
+body.claro .wfoot{background:#f0f2f5;color:#54656f}
 /* ===== tema claro (v1.4) ===== */
 .temabt{position:fixed;top:12px;right:14px;z-index:45;width:36px;height:36px;border-radius:50%;border:1px solid var(--linha);
   background:var(--card);color:var(--dourado);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -307,7 +343,7 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
     <button class="btn ghost" style="width:100%;margin-top:8px;font-size:12.5px" onclick="esqueciSenha()">Esqueci minha senha</button>
     <div class="lgfoot">
       <span class="online"><i></i>Sistema online</span><br/>
-      Ambiente seguro · HENRIQUECER · v1.5.0
+      Ambiente seguro · HENRIQUECER · v1.5.1
     </div>
   </div>
 </div>
@@ -340,8 +376,13 @@ button:focus-visible{outline:2px solid rgba(232,184,75,.7);outline-offset:2px}
 <script>
 // =============== infra ===============
 var TK='crm_token';
-var VERSAO='1.5.0';
+var VERSAO='1.5.1';
 var NOVIDADES=[
+ {v:'1.5.1',data:'30/09/2026',titulo:'Conversas ainda mais WhatsApp',itens:[
+  'Lista de conversas com foto do lead, busca e filtros (Todas / Em triagem / Encaminhadas)',
+  'Separadores de data (Hoje/Ontem) e balões com rabinho, igual ao WhatsApp Web',
+  'Prévia do caso e horário em cada conversa da lista'
+ ]},
  {v:'1.5.0',data:'30/09/2026',titulo:'Conversas com cara de WhatsApp',itens:[
   'Aba Conversas redesenhada no visual do WhatsApp: balões verdes e escuros, cabeçalho com o contato e confirmação de envio',
   'Nova etapa Follow-up no funil, entre Reunião agendada e Proposta — pra nenhum lead esfriar sem dono',
@@ -835,43 +876,95 @@ function renderLeads(){
   var b=document.getElementById('busca');if(b&&q)b.value=q;
 }
 
-// =============== CONVERSAS ===============
+// =============== CONVERSAS (estilo WhatsApp Web) ===============
+var WCV={filtro:'todas',busca:''};
+var FOTOS={};
+function horaCurta(iso){
+  if(!iso)return '';
+  var d=new Date(iso);
+  return d.toDateString()===new Date().toDateString()
+    ? d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+    : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
 function renderConversas(){
   var el=document.getElementById('vw-conversas');
-  var comConversa=LEADS.filter(function(l){return l.conversation_id});
-  var h='<div class="row"><h2>Conversas</h2><span class="mini">respostas manuais: pelo WhatsApp (a Júria pausa sozinha)</span></div>';
-  h+='<div class="convgrid"><div class="convlist" id="clist">';
-  if(!comConversa.length)h+=vz('Nenhuma conversa ainda','Quando a Júria atender um lead no WhatsApp, a conversa completa aparece aqui.');
-  comConversa.forEach(function(l){var c=l.conversations||{};
-    h+='<div class="convitem" data-id="'+l.id+'" onclick="abrirChat(\\''+l.id+'\\')"><b>'+esc(l.nome||c.nome_contato||'(sem nome)')+'</b>'+
-       '<small>'+esc(l.area_juridica||'')+' · '+esc(c.status||'')+'</small></div>'});
-  h+='</div><div class="wachat"><div class="wahd" id="wahd"><div class="wava">?</div><div><b>Selecione uma conversa</b><small>ao lado</small></div></div>'+
-     '<div class="wabody" id="cchat"><div class="vazio" style="color:#8696a0">As mensagens aparecem aqui, como no WhatsApp.</div></div></div></div>';
+  var h='<div class="row"><h2>Conversas</h2></div>';
+  h+='<div class="convgrid"><div class="walist">'+
+    '<div class="wlhd">'+
+      '<div class="wbusca">🔍<input id="wbusca" placeholder="Pesquisar conversa" value="'+esc(WCV.busca)+'" oninput="WCV.busca=this.value;desenhaListaConv()"/></div>'+
+      '<div class="wchips">'+
+        [['todas','Todas'],['triagem','Em triagem'],['encaminhadas','Encaminhadas']].map(function(f){
+          return '<button class="wchip'+(WCV.filtro===f[0]?' on':'')+'" onclick="WCV.filtro=\\''+f[0]+'\\';renderConversas()">'+f[1]+'</button>'}).join('')+
+      '</div>'+
+    '</div>'+
+    '<div class="wlitens" id="wlitens"></div>'+
+  '</div>'+
+  '<div class="wachat"><div class="wahd" id="wahd"><div class="wava">?</div><div><b>Selecione uma conversa</b><small>na lista ao lado</small></div></div>'+
+  '<div class="wabody" id="cchat"><div class="vazio" style="color:#8696a0">As mensagens aparecem aqui, como no WhatsApp.</div></div>'+
+  '<div class="wfoot">🔒 Pra responder, use o WhatsApp do escritório — a Júria pausa sozinha e tudo fica registrado aqui.</div>'+
+  '</div></div>';
   el.innerHTML=h;
+  desenhaListaConv();
 }
-function renderMsgWA(m){
+function desenhaListaConv(){
+  var box=document.getElementById('wlitens');if(!box)return;
+  var q=(WCV.busca||'').toLowerCase();
+  var lista=LEADS.filter(function(l){
+    if(!l.conversation_id)return false;
+    var c=l.conversations||{};
+    if(WCV.filtro==='triagem'&&c.status!=='ativo')return false;
+    if(WCV.filtro==='encaminhadas'&&c.status!=='encaminhado')return false;
+    if(q&&!(String(l.nome||c.nome_contato||'').toLowerCase().includes(q)||String(l.area_juridica||'').toLowerCase().includes(q)||String(c.contato||'').includes(q)))return false;
+    return true;
+  });
+  if(!lista.length){box.innerHTML='<div class="vazio" style="color:#8696a0;padding:30px 16px">Nenhuma conversa aqui.</div>';return}
+  box.innerHTML=lista.map(function(l){
+    var c=l.conversations||{};
+    var nome=l.nome||c.nome_contato||'(sem nome)';
+    var previa=l.resumo_caso||l.area_juridica||c.contato||'';
+    return '<div class="witem" data-id="'+l.id+'" onclick="abrirChat(\\''+l.id+'\\')">'+
+      '<div class="wava" id="wav-'+l.id+'">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
+      '<div class="wtx"><b>'+esc(nome)+'</b><small>'+esc(previa)+'</small></div>'+
+      '<span class="whora">'+horaCurta(l.updated_at)+'</span>'+
+    '</div>'}).join('');
+  lista.forEach(function(l){pintarFotoLead(l.id,'wav-'+l.id)});
+}
+function pintarFotoLead(leadId,elId){
+  var aplica=function(url){var av=document.getElementById(elId);
+    if(av&&url){av.style.backgroundImage='url('+url+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent=''}};
+  if(leadId in FOTOS){aplica(FOTOS[leadId]);return}
+  api('/api/crm/leads/'+leadId+'/foto').then(function(d){FOTOS[leadId]=d.url||null;aplica(d.url)}).catch(function(){FOTOS[leadId]=null});
+}
+function rotuloDia(iso){
+  var d=new Date(iso);var hoje=new Date();var ontem=new Date(hoje.getTime()-86400000);
+  if(d.toDateString()===hoje.toDateString())return 'Hoje';
+  if(d.toDateString()===ontem.toDateString())return 'Ontem';
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function renderMsgWA(m,ini){
   var conteudo=renderMsg(m.content);
-  var hora=new Date(m.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+new Date(m.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  var hora=new Date(m.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   var meta='<span class="wmeta">'+hora+(m.role==='assistant'?' <span class="wtick">✓✓</span>':'')+'</span>';
-  return '<div class="wam '+(m.role==='user'?'lead':'ia')+'">'+conteudo+meta+'</div>';
+  return '<div class="wam '+(m.role==='user'?'lead':'ia')+(ini?' ini':'')+'">'+conteudo+meta+'</div>';
 }
 function abrirChat(id){
-  document.querySelectorAll('.convitem').forEach(function(x){x.classList.toggle('on',x.dataset.id===id)});
+  document.querySelectorAll('.witem').forEach(function(x){x.classList.toggle('on',x.dataset.id===id)});
   var l=LEADS.find(function(x){return x.id===id})||{};
   var c=l.conversations||{};
   var nome=l.nome||c.nome_contato||'(sem nome)';
   var hd=document.getElementById('wahd');
-  if(hd)hd.innerHTML='<div class="wava" id="wavaHd">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
+  if(hd){hd.innerHTML='<div class="wava" id="wavaHd">'+esc(String(nome).trim().charAt(0).toUpperCase()||'?')+'</div>'+
     '<div><b>'+esc(nome)+'</b><small>'+esc(c.contato||'')+(l.area_juridica?' · '+esc(l.area_juridica):'')+'</small></div>';
-  // foto de perfil do WhatsApp (quando o contato tiver uma pública)
-  api('/api/crm/leads/'+id+'/foto').then(function(d){
-    var av=document.getElementById('wavaHd');
-    if(av&&d.url){av.style.backgroundImage='url('+d.url+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent=''}
-  }).catch(function(){});
+    pintarFotoLead(id,'wavaHd');}
   var box=document.getElementById('cchat');box.innerHTML='<div class="vazio" style="color:#8696a0">Carregando…</div>';
   api('/api/crm/leads/'+id+'/mensagens').then(function(d){
-    var h='';
-    d.mensagens.forEach(function(m){h+=renderMsgWA(m)});
+    var h='';var diaAnt='';var roleAnt='';
+    d.mensagens.forEach(function(m){
+      var dia=String(m.created_at).slice(0,10);
+      if(dia!==diaAnt){h+='<div class="wdia">'+rotuloDia(m.created_at)+'</div>';diaAnt=dia;roleAnt=''}
+      h+=renderMsgWA(m,m.role!==roleAnt);
+      roleAnt=m.role;
+    });
     box.innerHTML=h||'<div class="vazio" style="color:#8696a0">Sem mensagens.</div>';
     box.scrollTop=box.scrollHeight;
   }).catch(function(e){box.innerHTML='<div class="vazio" style="color:#8696a0">Erro: '+esc(e.message)+'</div>'});
